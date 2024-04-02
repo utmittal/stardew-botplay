@@ -100,35 +100,15 @@ namespace BotPlay {
             foreach (Layer layer in Game1.currentLocation.map.Layers) {
                 Log($"\t{layer.Id}");
                 Log($"\t\tDescription: {layer.Description}");
-                Log($"\t\tSize: {layer.TileWidth}x{layer.TileHeight}");
+                Log($"\t\tSize: {layer.LayerWidth}x{layer.LayerHeight}");
                 Log($"\t\tProperties:");
                 foreach (var property in layer.Properties) {
                     Log($"\t\t\t{property.Key}: {property.Value.ToString()}");
                 }
             }
 
-            Log("Visualizer:");
-            char[,] visualizer = new char[12,12];
-            for (int i = 0; i < 12; i++) {
-                for (int j = 0; j < 12; j++) {
-                    //if (layer.IsValidTileLocation(new xTile.Dimensions.Location(i, j))) {
-                    if (Game1.currentLocation.IsTileBlockedBy(new Vector2(j, i), ignorePassables: CollisionMask.All)) {
-
-                        visualizer[j, i] = 'x';
-                    }
-                    else {
-                        visualizer[j, i] = ' ';
-                    }
-                }
-            }
-            visualizer[(int)Game1.player.Tile.X, (int)Game1.player.Tile.Y] = '@';
-            for (int i = 0; i < 12; i++) {
-                String row = "";
-                for (int j = 0; j < 12; j++) {
-                    row += $"{visualizer[j, i]} ";
-                }
-                Log(row);
-            }
+            SimpleMap testMap = new SimpleMap(Game1.currentLocation.map);
+            testMap.VisualizeMap(this.Monitor);
             //goToTarget = true;
         }
 
