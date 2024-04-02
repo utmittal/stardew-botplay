@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BotPlay")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d71133b55841c768c0eb57f85d72c841dbab4b9c")]
 [assembly: System.Reflection.AssemblyProductAttribute("BotPlay")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BotPlay")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
