@@ -1,0 +1,10 @@
+{
+  "Name": "Bot Plays Stardew",
+  "Author": "Hobothehill",
+  "Version": "1.0.0",
+  "Description": "A bot to play stardew valley.",
+  "UniqueID": "Hobothehill.BotPlay",
+  "EntryDll": "BotPlay.dll",
+  "MinimumApiVersion": "3.0.0",
+  "UpdateKeys": []
+}

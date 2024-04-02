@@ -1,0 +1,8 @@
+C:\Data\source\vs\repos\BotPlay\BotPlay\bin\Debug\net6.0\BotPlay.deps.json
+C:\Data\source\vs\repos\BotPlay\BotPlay\bin\Debug\net6.0\BotPlay.dll
+C:\Data\source\vs\repos\BotPlay\BotPlay\obj\Debug\net6.0\BotPlay.csproj.AssemblyReference.cache
+C:\Data\source\vs\repos\BotPlay\BotPlay\obj\Debug\net6.0\BotPlay.GeneratedMSBuildEditorConfig.editorconfig
+C:\Data\source\vs\repos\BotPlay\BotPlay\obj\Debug\net6.0\BotPlay.AssemblyInfoInputs.cache
+C:\Data\source\vs\repos\BotPlay\BotPlay\obj\Debug\net6.0\BotPlay.AssemblyInfo.cs
+C:\Data\source\vs\repos\BotPlay\BotPlay\obj\Debug\net6.0\BotPlay.csproj.CoreCompileInputs.cache
+C:\Data\source\vs\repos\BotPlay\BotPlay\obj\Debug\net6.0\BotPlay.dll
