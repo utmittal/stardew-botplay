@@ -90,10 +90,14 @@ namespace BotPlay {
 
         private void Play() {
             Log($"current location name {Game1.currentLocation.Name}");
-            Log($"current location coordinate: {Game1.player.Tile.X},{Game1.player.Tile.Y}");
+            int playerX = (int)Game1.player.Tile.X;
+            int playerY = (int)Game1.player.Tile.Y;
+            Log($"current location coordinate: {playerX},{playerY}");
             Log("warp locations:");
             foreach (Warp warp in Game1.currentLocation.warps) {
                 Log($"\t{warp.X},{warp.Y}: {warp.TargetName}");
+                Log("\tPath from player: ");
+                MapGraph.VisualizeMap(this.Monitor, (playerX, playerY), (warp.X, warp.Y));
             }
 
             Log("Layers:");
@@ -107,8 +111,7 @@ namespace BotPlay {
                 }
             }
 
-            PathFinder testMap = new PathFinder(Game1.currentLocation.map);
-            testMap.VisualizeMap(this.Monitor);
+            //MapGraph.VisualizeMap(this.Monitor);
             //goToTarget = true;
         }
 

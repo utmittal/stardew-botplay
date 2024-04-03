@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace BotPlay {
-    internal class SimpleTile {
+    internal record struct SimpleTile {
         public enum TileType {
             Unknown,
             Empty,
@@ -14,26 +14,24 @@ namespace BotPlay {
             EndOfMap
         }
 
+        // X coordinate of tile in-game
         public int X {
-            get; set;
+            get;
         }
+        // Y coordinate of tile in-game
         public int Y {
-            get; set;
+            get;
         }
         public TileType Type {
-            get; set;
+            get;
         }
 
-        public SimpleTile(int X, int Y, TileType type) {
-            this.X = X;
-            this.Y = Y;
-            this.Type = type;
+        public SimpleTile(int x, int y, TileType type) {
+            this.X = x; this.Y = y; this.Type = type;
         }
 
-        public SimpleTile(int X, int Y) {
-            this.X = X;
-            this.Y = Y;
-            this.Type = TileType.Unknown;
+        public override string ToString() {
+            return $"({this.X}, {this.Y}, {this.Type})";
         }
     }
 }
