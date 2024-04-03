@@ -12,6 +12,7 @@ namespace BotPlay {
     internal class MapGraph {
 
         private static readonly float STRAIGHT_WEIGHT = 1;
+        private static readonly float DIAGONAL_WEIGHT = 1.41f;  // length of diagonal in a square of side 1
 
         public MapGraph() {
         }
@@ -205,8 +206,9 @@ namespace BotPlay {
                         continue;
                     }
                     else if (currentTile.Type == SimpleTile.TileType.Empty) {
-                        (int, int)[] neighbours = GetNeighbourIndices(i, j);
-                        foreach ((int ni, int nj) in neighbours) {
+                        (int, int)[] middleNeighbours = GetMiddleNeighbourIndices(i, j);
+                        (int, int)[] cornerNeighbours = GetCornerNeighbourIndices(i, j);
+                        foreach ((int ni, int nj) in middleNeighbours) {
                             SimpleTile neighbourTile = tileMatrix[ni, nj];
 
                             // If the adjacency matrix has the edge already in even one direction, it means this tuple of nodes has been processed already. We don't need to do it again.
@@ -232,6 +234,41 @@ namespace BotPlay {
                                         tileNeighbours[currentTile].Add(neighbourTile);
                                     }
                                 }
+                            }
+                        }
+                        foreach ((int ni, int nj) in cornerNeighbours) {
+                            SimpleTile neighbourTile = tileMatrix[ni, nj];
+
+                            // If the adjacency matrix has the edge already in even one direction, it means this tuple of nodes has been processed already. We don't need to do it again.
+                            // Warp points are the only exception to this but we don't need to worry about those if we check the ((i,j),(ni,nj)) pair.
+                            if (!adjacencyMatrix.ContainsKey((currentTile, neighbourTile))) {
+                                // To walk diagonally in stardew, all 4 tiles in a square need to be empty. I.e. if the layout looks like (o is free, x is blocked):
+                                //     x o
+                                //     o o 
+                                // the player cannot run diagonally across this. So we need to check that all 4 tiles are free.
+                                SimpleTile crossingDiagonalTile1 = tileMatrix[i, nj];
+                                SimpleTile crossingDiagonalTile2 = tileMatrix[ni, j];
+                                if (neighbourTile.Type == SimpleTile.TileType.Empty && crossingDiagonalTile1.Type == SimpleTile.TileType.Empty && crossingDiagonalTile2.Type == SimpleTile.TileType.Empty) {
+                                    // Add edge in both directions for BOTH diagonals
+                                    adjacencyMatrix.Add((currentTile, neighbourTile), DIAGONAL_WEIGHT);
+                                    adjacencyMatrix.Add((neighbourTile, currentTile), DIAGONAL_WEIGHT);
+                                    adjacencyMatrix.Add((crossingDiagonalTile1, crossingDiagonalTile2), DIAGONAL_WEIGHT);
+                                    adjacencyMatrix.Add((crossingDiagonalTile2, crossingDiagonalTile1), DIAGONAL_WEIGHT);
+                                    // Add neighbours in both directions for both diagonals
+                                    if (!tileNeighbours.TryAdd(currentTile, new HashSet<SimpleTile>() { neighbourTile })) {
+                                        tileNeighbours[currentTile].Add(neighbourTile);
+                                    }
+                                    if (!tileNeighbours.TryAdd(neighbourTile, new HashSet<SimpleTile>() { currentTile })) {
+                                        tileNeighbours[neighbourTile].Add(currentTile);
+                                    }
+                                    if (!tileNeighbours.TryAdd(crossingDiagonalTile1, new HashSet<SimpleTile>() { crossingDiagonalTile2 })) {
+                                        tileNeighbours[crossingDiagonalTile1].Add(crossingDiagonalTile2);
+                                    }
+                                    if (!tileNeighbours.TryAdd(crossingDiagonalTile2, new HashSet<SimpleTile>() { crossingDiagonalTile1 })) {
+                                        tileNeighbours[crossingDiagonalTile2].Add(crossingDiagonalTile1);
+                                    }
+                                }
+                                // else if condition for warp point diagonal is more complex. It would require checking that the corresponding crossing tile in line with the warp point is either empty or a warp point itself.
                             }
                         }
 
@@ -294,9 +331,14 @@ namespace BotPlay {
             return x == 0 || y == 0 || x == width - 1 || y == height - 1;
         }
 
-        private static (int, int)[] GetNeighbourIndices(int x, int y) {
+        private static (int, int)[] GetMiddleNeighbourIndices(int x, int y) {
             // left, right, up, down only. No corners.
             return new (int, int)[] { (x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1) };
+        }
+
+        private static (int, int)[] GetCornerNeighbourIndices(int x, int y) {
+            // corners only.
+            return new (int, int)[] { (x - 1, y - 1), (x - 1, y + 1), (x + 1, y - 1), (x + 1, y + 1) };
         }
 
     }
