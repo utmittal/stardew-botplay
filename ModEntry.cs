@@ -107,7 +107,7 @@ namespace BotPlay {
                 }
             }
 
-            SimpleMap testMap = new SimpleMap(Game1.currentLocation.map);
+            PathFinder testMap = new PathFinder(Game1.currentLocation.map);
             testMap.VisualizeMap(this.Monitor);
             //goToTarget = true;
         }
