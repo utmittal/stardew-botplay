@@ -111,7 +111,7 @@ namespace BotPlay {
                 if (warp.TargetName == targetName) {
                     return warp;
                 }
-             }
+            }
             return null;
         }
 
@@ -119,7 +119,7 @@ namespace BotPlay {
             var path = new Queue<SimpleTile>(pathTilesList);
 
             SimpleTile origin = path.Peek();
-            if(origin.X != Game1.player.Tile.X || origin.Y != Game1.player.Tile.Y) {
+            if (origin.X != Game1.player.Tile.X || origin.Y != Game1.player.Tile.Y) {
                 throw new InvalidOperationException($"Current player location: {Game1.player.Tile.X}, {Game1.player.Tile.Y} did not match path origin: {origin.X},{origin.Y}");
             }
 
@@ -156,7 +156,7 @@ namespace BotPlay {
         }
 
         private void InitInputSimulator() {
-            IReflectedField<IInputSimulator>? reflectedInputSimulator = 
+            IReflectedField<IInputSimulator>? reflectedInputSimulator =
                 helper?.Reflection.GetField<IInputSimulator>(typeof(Game1), "inputSimulator", true);
             if (reflectedInputSimulator?.GetValue() == null) {
                 Log("Initializing reflected input simulator.");

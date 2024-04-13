@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using xTile.Tiles;
 
 namespace BotPlay {
     internal class PathWalker {
@@ -28,16 +29,22 @@ namespace BotPlay {
         }
 
         public void GameLoop_UpdateTicked_WalkPath(object? sender, UpdateTickedEventArgs e) {
-            (int x, int y) player = ((int)Game1.player.Tile.X, (int)Game1.player.Tile.Y);
+            (int x, int y) player = ((int)Math.Round(Game1.player.Tile.X), (int)Math.Round(Game1.player.Tile.Y));
             monitor.Log($"Player location: {player.x},{player.y}");
             monitor.Log($"Next tile: {nextTile.X},{nextTile.Y}");
             monitor.Log($"Current direction: {currentDirection}");
 
             if (PlayerAtLocation(player, nextTile)) {
                 if (path.Count > 0) {
-
                     nextTile = path.Dequeue();
                     monitor.Log($"\tUpdated next tile: {nextTile.X},{nextTile.Y}");
+
+                    Direction directionToWalk = CalculateDirection(player, nextTile);
+                    if (currentDirection != directionToWalk) {
+                        UpdateInput(directionToWalk);
+                        currentDirection = directionToWalk;
+                        monitor.Log($"\t Updated current direction: {currentDirection}");
+                    }
                 }
                 else if (path.Count == 0) {
                     UpdateInput(Direction.None);
@@ -46,16 +53,25 @@ namespace BotPlay {
                 }
             }
 
-            Direction directionToWalk = CalculateDirection(player, nextTile);
-            if (currentDirection != directionToWalk) {
-                UpdateInput(directionToWalk);
-                currentDirection = directionToWalk;
-                monitor.Log($"\t Updated current direction: {currentDirection}");
+            // kill switch if we end up of course
+            if (PlayerOffCourse(player, nextTile)) {
+                currentDirection = Direction.None;
+                UpdateInput(Direction.None);
+                monitor.Log($"Next tile ({nextTile.X},{nextTile.Y}) is not in a 1 tile circle of the player ({player.x},{player.y}). Setting direction to None.");
             }
         }
 
         private bool PlayerAtLocation((int x, int y) player, SimpleTile tile) {
             if (player.x == tile.X && player.y == tile.Y) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
+        private bool PlayerOffCourse((int x, int y) player, SimpleTile tile) {
+            if (Math.Abs(player.x - tile.X) > 1 || Math.Abs(player.y - tile.Y) > 1) {
                 return true;
             }
             else {
