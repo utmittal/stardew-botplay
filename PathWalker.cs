@@ -28,6 +28,14 @@ namespace BotPlay {
             this.monitor = monitor;
         }
 
+        public bool HasWalkingEnded() {
+            // the 1 is to account for warp points not being dequeued. But this needs to be more intelligent.
+            if (this.path.Count <= 1 && this.currentDirection == Direction.None) {
+                return true;
+            }
+            return false;
+        }
+
         public void GameLoop_UpdateTicked_WalkPath(object? sender, UpdateTickedEventArgs e) {
             (int x, int y) player = ((int)Math.Round(Game1.player.Tile.X), (int)Math.Round(Game1.player.Tile.Y));
             monitor.Log($"Player location: {player.x},{player.y}");
@@ -71,7 +79,7 @@ namespace BotPlay {
         }
 
         private bool PlayerOffCourse((int x, int y) player, SimpleTile tile) {
-            if (Math.Abs(player.x - tile.X) > 1 || Math.Abs(player.y - tile.Y) > 1) {
+            if (Math.Abs(player.x - tile.X) > 1 || Math.Abs(player.y - tile.Y)>1) {
                 return true;
             }
             else {
@@ -168,5 +176,7 @@ namespace BotPlay {
                 inputSimulator.MoveLeftHeld = true;
             }
         }
+
+
     }
 }
