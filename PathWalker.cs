@@ -38,9 +38,9 @@ namespace BotPlay {
 
         public void GameLoop_UpdateTicked_WalkPath(object? sender, UpdateTickedEventArgs e) {
             (int x, int y) player = ((int)Math.Round(Game1.player.Tile.X), (int)Math.Round(Game1.player.Tile.Y));
-            monitor.Log($"Player location: {player.x},{player.y}");
-            monitor.Log($"Next tile: {nextTile.X},{nextTile.Y}");
-            monitor.Log($"Current direction: {currentDirection}");
+            //monitor.Log($"Player location: {player.x},{player.y}");
+            //monitor.Log($"Next tile: {nextTile.X},{nextTile.Y}");
+            //monitor.Log($"Current direction: {currentDirection}");
 
             if (PlayerAtLocation(player, nextTile)) {
                 if (path.Count > 0) {
@@ -57,7 +57,7 @@ namespace BotPlay {
                 else if (path.Count == 0) {
                     UpdateInput(Direction.None);
                     currentDirection = Direction.None;
-                    monitor.Log($"Current direction: {currentDirection}");
+                    //monitor.Log($"Current direction: {currentDirection}");
                 }
             }
 
@@ -176,7 +176,5 @@ namespace BotPlay {
                 inputSimulator.MoveLeftHeld = true;
             }
         }
-
-
     }
 }
