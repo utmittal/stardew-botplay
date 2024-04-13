@@ -22,6 +22,8 @@ namespace BotPlay {
         int targetY = 12;
         bool goToTarget = false;
 
+        EventHandler<UpdateTickedEventArgs> exitFarmEvent = null;
+
         /*********
         ** Public methods
         *********/
@@ -36,24 +38,12 @@ namespace BotPlay {
         }
 
         private void GameLoop_UpdateTicked(object? sender, UpdateTickedEventArgs e) {
-            if (goToTarget == false || !Context.IsWorldReady) {
+            // ignore if player hasn't loaded a save yet
+            if (!Context.IsWorldReady)
                 return;
-            }
 
-            Log($"current location coordinate: {Game1.player.Tile.X},{Game1.player.Tile.Y}");
-
-            if (Game1.player.Tile.X != targetX) {
-                inputSimulator.MoveLeftHeld = true;
-            }
-            else if(Game1.player.Tile.X == targetX) {
-                inputSimulator.MoveLeftHeld = false;
-            }
-
-            if (Game1.player.Tile.Y != targetY) {
-                inputSimulator.MoveDownHeld = true;
-            }
-            else if (Game1.player.Tile.Y == targetY) {
-                inputSimulator.MoveDownHeld = false;
+            if (Game1.currentLocation.Name == "Farm" && this.exitFarmEvent != null) {
+                helper.Events.GameLoop.UpdateTicked -= this.exitFarmEvent;
             }
         }
 
@@ -77,6 +67,7 @@ namespace BotPlay {
                     playing = true;
                     Log("Started playing.");
                     InitInputSimulator();
+                    ExitFarmhouse();
                     Play();
                 }
                 else if (playing == true) {
@@ -86,6 +77,55 @@ namespace BotPlay {
                     return;
                 }
             }
+
+            if (e.Button == SButton.OemPipe) {
+                CodeExplore();
+            }
+        }
+
+        private void CodeExplore() {
+            foreach (var feature in Game1.currentLocation.terrainFeatures) {
+                foreach (var f2 in feature) {
+                    Log($"{f2.Key}: {f2.Value}");
+                }
+            }
+
+            foreach (var deb in Game1.currentLocation.Objects) {
+                foreach (var ob2 in deb) {
+                    Log($"{ob2.Key}: {ob2.Value.Name}");
+                }
+            }
+        }
+
+        private void ExitFarmhouse() {
+            Warp? farmWarp = FindWarp("Farm");
+
+            var exitFarmhousePath = MapGraph.FindPath(((int)Game1.player.Tile.X, (int)Game1.player.Tile.Y), (farmWarp.X, farmWarp.Y));
+
+            WalkAlongPath(exitFarmhousePath);
+        }
+
+        // Finds (any) warp point to specified target. Returns null if it can't find one.
+        private Warp? FindWarp(string targetName) {
+            foreach (Warp warp in Game1.currentLocation.warps) {
+                if (warp.TargetName == targetName) {
+                    return warp;
+                }
+             }
+            return null;
+        }
+
+        private void WalkAlongPath(List<SimpleTile> pathTilesList) {
+            var path = new Queue<SimpleTile>(pathTilesList);
+
+            SimpleTile origin = path.Peek();
+            if(origin.X != Game1.player.Tile.X || origin.Y != Game1.player.Tile.Y) {
+                throw new InvalidOperationException($"Current player location: {Game1.player.Tile.X}, {Game1.player.Tile.Y} did not match path origin: {origin.X},{origin.Y}");
+            }
+
+            PathWalker pathWalker = new PathWalker(path, inputSimulator, this.Monitor);
+            this.exitFarmEvent = pathWalker.GameLoop_UpdateTicked_WalkPath;
+            helper.Events.GameLoop.UpdateTicked += this.exitFarmEvent;
         }
 
         private void Play() {

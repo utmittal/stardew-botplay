@@ -30,7 +30,7 @@ namespace BotPlay {
             this.X = x; this.Y = y; this.Type = type;
         }
 
-        public override string ToString() {
+        public override readonly string ToString() {
             return $"({this.X}, {this.Y}, {this.Type})";
         }
     }
