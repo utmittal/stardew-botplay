@@ -8,6 +8,7 @@ using StardewValley.Characters;
 using StardewValley.Util;
 using System.Diagnostics.CodeAnalysis;
 using xTile.Layers;
+using System.Diagnostics;
 
 namespace BotPlay {
     /// <summary>The mod entry point.</summary>
@@ -100,7 +101,11 @@ namespace BotPlay {
         private void ExitFarmhouse() {
             Warp? farmWarp = FindWarp("Farm");
 
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
             var exitFarmhousePath = MapGraph.FindPath(((int)Game1.player.Tile.X, (int)Game1.player.Tile.Y), (farmWarp.X, farmWarp.Y));
+            stopwatch.Stop();
+            Log($"PathFinding for {destinationWarp} took {stopwatch.ElapsedMilliseconds}");
 
             WalkAlongPath(exitFarmhousePath);
         }
