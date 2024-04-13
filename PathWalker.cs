@@ -36,6 +36,8 @@ namespace BotPlay {
             return false;
         }
 
+        // diagonal walking is still a bit janky because the player keeps getting caught up on obstacles because of the float location for the player.
+        // I think we need more smarts for "PlayerAtLocation" by checking the player is fully "inside the tile".
         public void GameLoop_UpdateTicked_WalkPath(object? sender, UpdateTickedEventArgs e) {
             (int x, int y) player = ((int)Math.Round(Game1.player.Tile.X), (int)Math.Round(Game1.player.Tile.Y));
             //monitor.Log($"Player location: {player.x},{player.y}");
