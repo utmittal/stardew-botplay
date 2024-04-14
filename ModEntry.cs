@@ -172,7 +172,8 @@ namespace BotPlay {
                 Log($"\t{warp.X},{warp.Y}: {warp.TargetName}");
                 Log("\tPath from player: ");
                 SimpleMap currentMap = new SimpleMap(Game1.currentLocation);
-                currentMap.VisualizeMap(this.Monitor, (playerX, playerY), (warp.X, warp.Y));
+                List<SimpleTile> routeToWarp = currentMap.FindPath((playerX, playerY), (warp.X, warp.Y));
+                SimpleMapVisualizer.VisualizeMap(currentMap, routeToWarp, this.Monitor);
             }
 
             Log("Layers:");

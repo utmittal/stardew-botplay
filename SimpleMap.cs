@@ -35,13 +35,16 @@ namespace BotPlay {
         }
 
         private readonly GameLocation sdvLocation;
-        private string locationName;
         private SimpleTile[,]? mapTiles;
+
+        public string LocationName {
+            get;
+        }
 
         public SimpleMap(GameLocation gameLocation) {
             this.sdvLocation = gameLocation;
             // TODO: Should this be Name or UniqueName or Display Name?
-            this.locationName = gameLocation.Name;
+            this.LocationName = gameLocation.Name;
         }
 
         /// <summary>
@@ -60,7 +63,7 @@ namespace BotPlay {
             return sdvLocation.Map.Layers[0].LayerHeight;
         }
 
-        private SimpleTile[,] getMapTiles() {
+        public SimpleTile[,] getMapTiles() {
             this.mapTiles ??= GenerateTiles();
             return this.mapTiles;
         }
@@ -114,90 +117,6 @@ namespace BotPlay {
         }
 
         // ####################################################################### Yet to be refactored
-
-        public void VisualizeMap(IMonitor monitor) {
-            // Note the underlying map can change at any point, so this needs to be regenerated each time the method is called
-            char[,] debugMap = GetDebugMap();
-
-            for (int i = 0; i < debugMap.GetLength(1); i++) {
-                String row = "";
-                for (int j = 0; j < debugMap.GetLength(0); j++) {
-                    if (j != 0) {
-                        row += " ";
-                    }
-                    row += debugMap[j, i];
-                }
-
-                monitor.Log(row);
-            }
-        }
-
-        public void VisualizeMap(IMonitor monitor, (int x, int y) origin, (int x, int y) destination) {
-            List<SimpleTile> path = FindPath(origin, destination);
-            if (path.Count == 0) {
-                monitor.Log("Couldn't generate path. Printing normal map: ");
-                VisualizeMap(monitor);
-                return;
-            }
-            char[,] debugMap = GetDebugMap();
-
-            foreach (SimpleTile tile in path) {
-                if (tile.X == origin.x && tile.Y == origin.y) {
-                    // don't draw over origin
-                    continue;
-                }
-                if (tile.X == destination.x && tile.Y == destination.y) {
-                    // don't draw over destination
-                    continue;
-                }
-                debugMap[tile.X + 1, tile.Y + 1] = '*';
-            }
-
-            for (int i = 0; i < debugMap.GetLength(1); i++) {
-                String row = "";
-                for (int j = 0; j < debugMap.GetLength(0); j++) {
-                    if (j != 0) {
-                        row += " ";
-                    }
-                    row += debugMap[j, i];
-                }
-
-                monitor.Log(row);
-            }
-        }
-
-        private char[,] GetDebugMap() {
-            SimpleTile[,] tileMatrix = GenerateTiles();
-            char[,] debugMap = new char[tileMatrix.GetLength(0), tileMatrix.GetLength(1)];
-
-            int playerX = (int)Game1.player.Tile.X + 1;
-            int playerY = (int)Game1.player.Tile.Y + 1;
-
-            for (int i = 0; i < tileMatrix.GetLength(0); i++) {
-                for (int j = 0; j < tileMatrix.GetLength(1); j++) {
-                    if (i == playerX && j == playerY) {
-                        debugMap[i, j] = '@';
-                    }
-                    else if (tileMatrix[i, j].Type == SimpleTile.TileType.Empty) {
-                        debugMap[i, j] = ' ';
-                    }
-                    else if (tileMatrix[i, j].Type == SimpleTile.TileType.EndOfMap) {
-                        debugMap[i, j] = 'X';
-                    }
-                    else if (tileMatrix[i, j].Type == SimpleTile.TileType.Blocked) {
-                        debugMap[i, j] = 'o';
-                    }
-                    else if (tileMatrix[i, j].Type == SimpleTile.TileType.WarpPoint) {
-                        debugMap[i, j] = '#';
-                    }
-                    else {
-                        debugMap[i, j] = '?';
-                    }
-                }
-            }
-
-            return debugMap;
-        }
 
         public List<SimpleTile> FindPath((int x, int y) origin, (int x, int y) destination) {
             SimpleTile[,] tileMatrix = GenerateTiles();
