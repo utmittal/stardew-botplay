@@ -14,20 +14,78 @@ namespace BotPlay {
         private static readonly float STRAIGHT_WEIGHT = 1;
         private static readonly float DIAGONAL_WEIGHT = 1.41f;  // length of diagonal in a square of side 1
 
-        GameLocation gameLocation;
+        private readonly GameLocation sdvLocation;
+        private string locationName;
+        private SimpleTile[,]? mapTiles;
 
         public SimpleMap(GameLocation gameLocation) {
-            this.gameLocation = gameLocation;
+            this.sdvLocation = gameLocation;
+            // TODO: Should this be Name or UniqueName or Display Name?
+            this.locationName = gameLocation.Name;
         }
 
-        public int GetGameMapWidth() {
+        /// <summary>
+        /// Returns map width from the game (i.e. not the extended map we store)
+        /// </summary>
+        private int GetGameMapWidth() {
             // All layers have the same dimensions I think, so which one we choose doesn't matter
-            return gameLocation.Map.Layers[0].LayerWidth;
+            return sdvLocation.Map.Layers[0].LayerWidth;
         }
 
-        public int GetGameMapHeight() {
+        /// <summary>
+        /// Returns map height from the game (i.e. not the extended map we store)
+        /// </summary>
+        private int GetGameMapHeight() {
             // All layers have the same dimensions I think, so which one we choose doesn't matter
-            return gameLocation.Map.Layers[0].LayerHeight;
+            return sdvLocation.Map.Layers[0].LayerHeight;
+        }
+
+        private SimpleTile[,] getMapTiles() {
+            return this.mapTiles ?? GenerateTiles();
+        }
+
+        private SimpleTile[,] GenerateTiles() {
+            int gameMapWidth = GetGameMapWidth();
+            int gameMapHeight = GetGameMapHeight();
+            // We want to represent the outer boundary in our map because that's where the warp points are. In game, this often means warp points are at coordinates like (5,-1). 
+            // For the purposes of pathfinding, we want these included in our matrix, so we adjust the height and width we are working with. We also use special tile types for warp and endofmap.
+            int adjustedWidth = gameMapWidth + 2;
+            int adjustedHeight = gameMapHeight + 2;
+
+            this.mapTiles = new SimpleTile[adjustedWidth, adjustedHeight];
+
+            for (int i = 0; i < adjustedWidth; i++) {
+                for (int j = 0; j < adjustedHeight; j++) {
+                    if (IsEndOfMap(i, j, adjustedWidth, adjustedHeight)) {
+                        // We can add warp points later. For now mark as endofmap
+                        this.mapTiles[i, j] = new SimpleTile(i - 1, j - 1, SimpleTile.TileType.EndOfMap);
+                        continue;
+                    }
+
+                    // Adjust i,j to game coordinates. It's only -1 because the other extra row/column is at the end, so we don't care.
+                    int gameX = i - 1;
+                    int gameY = j - 1;
+                    if (gameX < 0 || gameY < 0 || gameX >= gameMapWidth || gameY >= gameMapHeight) {
+                        throw new InvalidOperationException(
+                            $"Game coordinates ({gameX},{gameY}) are invalid given current map size of ({gameMapWidth},{gameMapHeight})");
+                    }
+
+                    if (sdvLocation.IsTileBlockedBy(new Vector2(gameX, gameY), ignorePassables: CollisionMask.All) || sdvLocation.isWaterTile(gameX, gameY)) {
+                        this.mapTiles[i, j] = new SimpleTile(i - 1, j - 1, SimpleTile.TileType.Blocked);
+                    }
+                    else {
+                        this.mapTiles[i, j] = new SimpleTile(i - 1, j - 1, SimpleTile.TileType.Empty);
+                    }
+                }
+            }
+
+            // Add warp tiles
+            foreach (Warp warp in sdvLocation.warps) {
+                // These translations between game coordinates and our coordinates are dangerous. Easy to forget/get it wrong.
+                this.mapTiles[warp.X + 1, warp.Y + 1] = new SimpleTile(warp.X, warp.Y, SimpleTile.TileType.WarpPoint);
+            }
+
+            return this.mapTiles;
         }
 
         public void VisualizeMap(IMonitor monitor) {
@@ -286,50 +344,6 @@ namespace BotPlay {
             }
 
             return (adjacencyMatrix, tileNeighbours);
-        }
-
-        public SimpleTile[,] GenerateTiles() {
-            int gameMapWidth = GetGameMapWidth();
-            int gameMapHeight = GetGameMapHeight();
-            // We want to represent the outer boundary in our map because that's where the warp points are. In game, this often means warp points are at coordinates like (5,-1). 
-            // For the purposes of pathfinding, we want these included in our matrix, so we adjust the height and width we are working with. We also use special tile types for warp and endofmap.
-            int adjustedWidth = gameMapWidth + 2;
-            int adjustedHeight = gameMapHeight + 2;
-
-            SimpleTile[,] walkableTiles = new SimpleTile[adjustedWidth, adjustedHeight];
-
-            for (int i = 0; i < adjustedWidth; i++) {
-                for (int j = 0; j < adjustedHeight; j++) {
-                    if (IsEndOfMap(i, j, adjustedWidth, adjustedHeight)) {
-                        // We can add warp points later. For now mark as endofmap
-                        walkableTiles[i, j] = new SimpleTile(i - 1, j - 1, SimpleTile.TileType.EndOfMap);
-                        continue;
-                    }
-
-                    // Adjust i,j to game coordinates. It's only -1 because the other extra row/column is at the end, so we don't care.
-                    int gameX = i - 1;
-                    int gameY = j - 1;
-                    if (gameX < 0 || gameY < 0 || gameX >= gameMapWidth || gameY >= gameMapHeight) {
-                        throw new InvalidOperationException(
-                            $"Game coordinates ({gameX},{gameY}) are invalid given current map size of ({gameMapWidth},{gameMapHeight})");
-                    }
-
-                    if (gameLocation.IsTileBlockedBy(new Vector2(gameX, gameY), ignorePassables: CollisionMask.All) || gameLocation.isWaterTile(gameX, gameY)) {
-                        walkableTiles[i, j] = new SimpleTile(i - 1, j - 1, SimpleTile.TileType.Blocked);
-                    }
-                    else {
-                        walkableTiles[i, j] = new SimpleTile(i - 1, j - 1, SimpleTile.TileType.Empty);
-                    }
-                }
-            }
-
-            // Add warp tiles
-            foreach (Warp warp in gameLocation.warps) {
-                // These translations between game coordinates and our coordinates are dangerous. Easy to forget/get it wrong.
-                walkableTiles[warp.X + 1, warp.Y + 1] = new SimpleTile(warp.X, warp.Y, SimpleTile.TileType.WarpPoint);
-            }
-
-            return walkableTiles;
         }
 
         private static bool IsEndOfMap(int x, int y, int width, int height) {
