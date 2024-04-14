@@ -113,6 +113,8 @@ namespace BotPlay {
             return x == 0 || y == 0 || x == width - 1 || y == height - 1;
         }
 
+        // ####################################################################### Yet to be refactored
+
         public void VisualizeMap(IMonitor monitor) {
             // Note the underlying map can change at any point, so this needs to be regenerated each time the method is called
             char[,] debugMap = GetDebugMap();
