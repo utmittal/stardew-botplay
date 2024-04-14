@@ -14,6 +14,26 @@ namespace BotPlay {
         private static readonly float STRAIGHT_WEIGHT = 1;
         private static readonly float DIAGONAL_WEIGHT = 1.41f;  // length of diagonal in a square of side 1
 
+        private class HybridCoord {
+            public (int X, int Y) Game { get; }
+            public (int X, int Y) SimpleMap { get; }
+
+            public static HybridCoord FromGameCoord(int gameX, int gameY) {
+                return new HybridCoord((gameX, gameY), (gameX + 1, gameY+1));
+            }
+
+            public static HybridCoord FromSimpleMapCoord(int simpleMapX, int simpleMapY) {
+                // Note: it's valid to convert simple map index 0 to game index -1 because warp points etc are often represented by out of index numbers in game code.
+                return new HybridCoord((simpleMapX-1, simpleMapY-1), (simpleMapX, simpleMapY));
+            }
+
+            private HybridCoord((int x, int y) game, (int x, int y) simpleMap) {
+                // Pretty sure we don't need a deep copy here since we created the tuple ourselves from value types
+                this.Game = game;
+                this.SimpleMap = simpleMap;
+            }
+        }
+
         private readonly GameLocation sdvLocation;
         private string locationName;
         private SimpleTile[,]? mapTiles;
@@ -41,7 +61,8 @@ namespace BotPlay {
         }
 
         private SimpleTile[,] getMapTiles() {
-            return this.mapTiles ?? GenerateTiles();
+            this.mapTiles ??= GenerateTiles();
+            return this.mapTiles;
         }
 
         private SimpleTile[,] GenerateTiles() {
@@ -49,43 +70,47 @@ namespace BotPlay {
             int gameMapHeight = GetGameMapHeight();
             // We want to represent the outer boundary in our map because that's where the warp points are. In game, this often means warp points are at coordinates like (5,-1). 
             // For the purposes of pathfinding, we want these included in our matrix, so we adjust the height and width we are working with. We also use special tile types for warp and endofmap.
-            int adjustedWidth = gameMapWidth + 2;
-            int adjustedHeight = gameMapHeight + 2;
+            int simpleMapWidth = gameMapWidth + 2;
+            int simpleMapHeight = gameMapHeight + 2;
 
-            this.mapTiles = new SimpleTile[adjustedWidth, adjustedHeight];
+            SimpleTile[,] generatedTiles = new SimpleTile[simpleMapWidth, simpleMapHeight];
 
-            for (int i = 0; i < adjustedWidth; i++) {
-                for (int j = 0; j < adjustedHeight; j++) {
-                    if (IsEndOfMap(i, j, adjustedWidth, adjustedHeight)) {
+            for (int i = 0; i < simpleMapWidth; i++) {
+                for (int j = 0; j < simpleMapHeight; j++) {
+                    HybridCoord coords = HybridCoord.FromSimpleMapCoord(i, j);
+
+                    if (IsEndOfMap(coords.SimpleMap.X, coords.SimpleMap.Y, simpleMapWidth, simpleMapHeight)) {
                         // We can add warp points later. For now mark as endofmap
-                        this.mapTiles[i, j] = new SimpleTile(i - 1, j - 1, SimpleTile.TileType.EndOfMap);
+                        generatedTiles[coords.SimpleMap.X, coords.SimpleMap.Y] = new SimpleTile(coords.Game.X, coords.Game.Y, SimpleTile.TileType.EndOfMap);
                         continue;
                     }
 
-                    // Adjust i,j to game coordinates. It's only -1 because the other extra row/column is at the end, so we don't care.
-                    int gameX = i - 1;
-                    int gameY = j - 1;
-                    if (gameX < 0 || gameY < 0 || gameX >= gameMapWidth || gameY >= gameMapHeight) {
+                    // This should never happen.
+                    if (coords.Game.X < 0 || coords.Game.Y < 0 || coords.Game.Y >= gameMapWidth || coords.Game.Y >= gameMapHeight) {
                         throw new InvalidOperationException(
-                            $"Game coordinates ({gameX},{gameY}) are invalid given current map size of ({gameMapWidth},{gameMapHeight})");
+                            $"Game coordinates ({coords.Game.X},{coords.Game.Y}) are invalid given current map size of ({gameMapWidth},{gameMapHeight})");
                     }
 
-                    if (sdvLocation.IsTileBlockedBy(new Vector2(gameX, gameY), ignorePassables: CollisionMask.All) || sdvLocation.isWaterTile(gameX, gameY)) {
-                        this.mapTiles[i, j] = new SimpleTile(i - 1, j - 1, SimpleTile.TileType.Blocked);
+                    if (sdvLocation.IsTileBlockedBy(new Vector2(coords.Game.X, coords.Game.Y), ignorePassables: CollisionMask.All) || sdvLocation.isWaterTile(coords.Game.X, coords.Game.Y)) {
+                        generatedTiles[coords.SimpleMap.X, coords.SimpleMap.Y] = new SimpleTile(coords.Game.X, coords.Game.Y, SimpleTile.TileType.Blocked);
                     }
                     else {
-                        this.mapTiles[i, j] = new SimpleTile(i - 1, j - 1, SimpleTile.TileType.Empty);
+                        generatedTiles[coords.SimpleMap.X, coords.SimpleMap.Y] = new SimpleTile(coords.Game.X, coords.Game.Y, SimpleTile.TileType.Empty);
                     }
                 }
             }
 
             // Add warp tiles
             foreach (Warp warp in sdvLocation.warps) {
-                // These translations between game coordinates and our coordinates are dangerous. Easy to forget/get it wrong.
-                this.mapTiles[warp.X + 1, warp.Y + 1] = new SimpleTile(warp.X, warp.Y, SimpleTile.TileType.WarpPoint);
+                HybridCoord warpCoords = HybridCoord.FromGameCoord(warp.X, warp.Y);
+                generatedTiles[warpCoords.SimpleMap.X, warpCoords.SimpleMap.Y] = new SimpleTile(warpCoords.Game.X, warpCoords.Game.Y, SimpleTile.TileType.WarpPoint);
             }
 
-            return this.mapTiles;
+            return generatedTiles;
+        }
+
+        private static bool IsEndOfMap(int x, int y, int width, int height) {
+            return x == 0 || y == 0 || x == width - 1 || y == height - 1;
         }
 
         public void VisualizeMap(IMonitor monitor) {
@@ -344,10 +369,6 @@ namespace BotPlay {
             }
 
             return (adjacencyMatrix, tileNeighbours);
-        }
-
-        private static bool IsEndOfMap(int x, int y, int width, int height) {
-            return x == 0 || y == 0 || x == width - 1 || y == height - 1;
         }
 
         private static (int, int)[] GetMiddleNeighbourIndices(int x, int y) {
