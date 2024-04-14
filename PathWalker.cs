@@ -81,7 +81,7 @@ namespace BotPlay {
         }
 
         private bool PlayerOffCourse((int x, int y) player, SimpleTile tile) {
-            if (Math.Abs(player.x - tile.X) > 1 || Math.Abs(player.y - tile.Y) > 1) {
+            if (Math.Abs(player.x - tile.X) > 1 || Math.Abs(player.y - tile.Y)>1) {
                 return true;
             }
             else {

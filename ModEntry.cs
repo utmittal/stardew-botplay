@@ -18,12 +18,13 @@ namespace BotPlay {
         IModHelper? helper;
 
         private InputSimulator inputSimulator = new InputSimulator();
+        PathWalker pathWalker;
 
         int targetX = 3;
         int targetY = 12;
         bool goToTarget = false;
 
-        EventHandler<UpdateTickedEventArgs> exitFarmEvent = null;
+        EventHandler<UpdateTickedEventArgs> walkingEvent = null;
 
         /*********
         ** Public methods
@@ -43,8 +44,28 @@ namespace BotPlay {
             if (!Context.IsWorldReady)
                 return;
 
-            if (Game1.currentLocation.Name == "Farm" && this.exitFarmEvent != null) {
-                helper.Events.GameLoop.UpdateTicked -= this.exitFarmEvent;
+            if (pathWalker != null && pathWalker.HasWalkingEnded() && walkingEvent != null) {
+                Log("------------ removed walking event ------------");
+                helper.Events.GameLoop.UpdateTicked -= walkingEvent;
+                walkingEvent = null;
+            }
+            
+            if (Context.IsPlayerFree && walkingEvent == null) {
+                if (Game1.currentLocation.Name == "Farm") {
+                    GoToWarp("BusStop");
+                }
+                if (Game1.currentLocation.Name == "BusStop") {
+                    GoToWarp("Town");
+                }
+                if (Game1.currentLocation.Name == "Town") {
+                    GoToWarp("Mountain");
+                }
+                if (Game1.currentLocation.Name == "Mountain") {
+                    GoToWarp("Backwoods");
+                }
+                if (Game1.currentLocation.Name == "Backwoods") {
+                    GoToWarp("Farm");
+                }
             }
         }
 
@@ -68,12 +89,13 @@ namespace BotPlay {
                     playing = true;
                     Log("Started playing.");
                     InitInputSimulator();
-                    ExitFarmhouse();
+                    GoToWarp("Farm");
                     Play();
                 }
                 else if (playing == true) {
                     playing = false;
                     cleanupInputSimulator();
+                    helper.Events.GameLoop.UpdateTicked -= walkingEvent;
                     Log("Stopped playing.");
                     return;
                 }
@@ -98,8 +120,8 @@ namespace BotPlay {
             }
         }
 
-        private void ExitFarmhouse() {
-            Warp? farmWarp = FindWarp("Farm");
+        private void GoToWarp(string destinationWarp) {
+            Warp farmWarp = FindWarp(destinationWarp);
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -111,13 +133,15 @@ namespace BotPlay {
         }
 
         // Finds (any) warp point to specified target. Returns null if it can't find one.
-        private Warp? FindWarp(string targetName) {
+        private Warp FindWarp(string targetName) {
+            List<string> warpList = new List<string>();
             foreach (Warp warp in Game1.currentLocation.warps) {
+                warpList.Add(warp.TargetName);
                 if (warp.TargetName == targetName) {
                     return warp;
                 }
             }
-            return null;
+            throw new InvalidOperationException($"Could not find specified warp: {targetName}. Available warps: {string.Join(",",warpList)}");
         }
 
         private void WalkAlongPath(List<SimpleTile> pathTilesList) {
@@ -128,9 +152,9 @@ namespace BotPlay {
                 throw new InvalidOperationException($"Current player location: {Game1.player.Tile.X}, {Game1.player.Tile.Y} did not match path origin: {origin.X},{origin.Y}");
             }
 
-            PathWalker pathWalker = new PathWalker(path, inputSimulator, this.Monitor);
-            this.exitFarmEvent = pathWalker.GameLoop_UpdateTicked_WalkPath;
-            helper.Events.GameLoop.UpdateTicked += this.exitFarmEvent;
+            pathWalker = new PathWalker(path, inputSimulator, this.Monitor);
+            this.walkingEvent = pathWalker.GameLoop_UpdateTicked_WalkPath;
+            helper.Events.GameLoop.UpdateTicked += this.walkingEvent;
         }
 
         private void Play() {
