@@ -130,7 +130,8 @@ namespace BotPlay {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
             SimpleMap currentMap = new SimpleMap(Game1.currentLocation);
-            var exitFarmhousePath = currentMap.FindPath(((int)Game1.player.Tile.X, (int)Game1.player.Tile.Y), (farmWarp.X, farmWarp.Y));
+            PathFinder pathFinder = new PathFinder(currentMap);
+            var exitFarmhousePath = pathFinder.FindPath(((int)Game1.player.Tile.X, (int)Game1.player.Tile.Y), (farmWarp.X, farmWarp.Y));
             stopwatch.Stop();
             Log($"PathFinding for {destinationWarp} took {stopwatch.ElapsedMilliseconds}");
 
@@ -172,7 +173,8 @@ namespace BotPlay {
                 Log($"\t{warp.X},{warp.Y}: {warp.TargetName}");
                 Log("\tPath from player: ");
                 SimpleMap currentMap = new SimpleMap(Game1.currentLocation);
-                List<SimpleTile> routeToWarp = currentMap.FindPath((playerX, playerY), (warp.X, warp.Y));
+                PathFinder pathFinder = new PathFinder(currentMap);
+                List<SimpleTile> routeToWarp = pathFinder.FindPath((playerX, playerY), (warp.X, warp.Y));
                 SimpleMapVisualizer.VisualizeMap(currentMap, routeToWarp, this.Monitor);
             }
 

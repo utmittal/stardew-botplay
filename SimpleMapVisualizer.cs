@@ -32,7 +32,7 @@ namespace BotPlay {
         }
 
         private static char[,] GetDebugMap(SimpleMap map) {
-            SimpleTile[,] tileMatrix = map.getMapTiles();
+            SimpleTile[,] tileMatrix = map.GetMapTiles();
             char[,] debugMap = new char[tileMatrix.GetLength(0), tileMatrix.GetLength(1)];
 
             for (int i = 0; i < tileMatrix.GetLength(0); i++) {
