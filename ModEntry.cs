@@ -49,7 +49,11 @@ namespace BotPlay {
                 helper.Events.GameLoop.UpdateTicked -= walkingEvent;
                 walkingEvent = null;
             }
-            
+
+            //GlobeTrotting();
+        }
+
+        private void GlobeTrotting() {
             if (Context.IsPlayerFree && walkingEvent == null) {
                 if (Game1.currentLocation.Name == "Farm") {
                     GoToWarp("BusStop");
