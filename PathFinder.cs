@@ -32,7 +32,8 @@ namespace BotPlay {
 
         public void VisualizeMap(IMonitor monitor) {
             // Note the underlying map can change at any point, so this needs to be regenerated each time the method is called
-            SimpleTile[,] walkableTiles = MapGraph.GenerateTiles();
+            SimpleMap currentMap = new SimpleMap(Game1.currentLocation);
+            SimpleTile[,] walkableTiles = currentMap.GenerateTiles();
 
             int playerX = -1;
             int playerY = -1;

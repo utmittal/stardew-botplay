@@ -9,25 +9,28 @@ using System.Threading.Tasks;
 using xTile;
 
 namespace BotPlay {
-    internal class MapGraph {
+    internal class SimpleMap {
 
         private static readonly float STRAIGHT_WEIGHT = 1;
         private static readonly float DIAGONAL_WEIGHT = 1.41f;  // length of diagonal in a square of side 1
 
-        public MapGraph() {
+        GameLocation gameLocation;
+
+        public SimpleMap(GameLocation gameLocation) {
+            this.gameLocation = gameLocation;
         }
 
-        public static int GetGameMapWidth() {
+        public int GetGameMapWidth() {
             // All layers have the same dimensions I think, so which one we choose doesn't matter
-            return Game1.currentLocation.Map.Layers[0].LayerWidth;
+            return gameLocation.Map.Layers[0].LayerWidth;
         }
 
-        public static int GetGameMapHeight() {
+        public int GetGameMapHeight() {
             // All layers have the same dimensions I think, so which one we choose doesn't matter
-            return Game1.currentLocation.Map.Layers[0].LayerHeight;
+            return gameLocation.Map.Layers[0].LayerHeight;
         }
 
-        public static void VisualizeMap(IMonitor monitor) {
+        public void VisualizeMap(IMonitor monitor) {
             // Note the underlying map can change at any point, so this needs to be regenerated each time the method is called
             char[,] debugMap = GetDebugMap();
 
@@ -44,7 +47,7 @@ namespace BotPlay {
             }
         }
 
-        public static void VisualizeMap(IMonitor monitor, (int x, int y) origin, (int x, int y) destination) {
+        public void VisualizeMap(IMonitor monitor, (int x, int y) origin, (int x, int y) destination) {
             List<SimpleTile> path = FindPath(origin, destination);
             if (path.Count == 0) {
                 monitor.Log("Couldn't generate path. Printing normal map: ");
@@ -78,7 +81,7 @@ namespace BotPlay {
             }
         }
 
-        private static char[,] GetDebugMap() {
+        private char[,] GetDebugMap() {
             SimpleTile[,] tileMatrix = GenerateTiles();
             char[,] debugMap = new char[tileMatrix.GetLength(0), tileMatrix.GetLength(1)];
 
@@ -111,7 +114,7 @@ namespace BotPlay {
             return debugMap;
         }
 
-        public static List<SimpleTile> FindPath((int x, int y) origin, (int x, int y) destination) {
+        public List<SimpleTile> FindPath((int x, int y) origin, (int x, int y) destination) {
             SimpleTile[,] tileMatrix = GenerateTiles();
             var (adjacencyMatrix, tileNeighbours) = GenerateGraph(tileMatrix);
             SimpleTile originTile = tileMatrix[origin.x + 1, origin.y + 1];
@@ -285,7 +288,7 @@ namespace BotPlay {
             return (adjacencyMatrix, tileNeighbours);
         }
 
-        public static SimpleTile[,] GenerateTiles() {
+        public SimpleTile[,] GenerateTiles() {
             int gameMapWidth = GetGameMapWidth();
             int gameMapHeight = GetGameMapHeight();
             // We want to represent the outer boundary in our map because that's where the warp points are. In game, this often means warp points are at coordinates like (5,-1). 
@@ -311,7 +314,7 @@ namespace BotPlay {
                             $"Game coordinates ({gameX},{gameY}) are invalid given current map size of ({gameMapWidth},{gameMapHeight})");
                     }
 
-                    if (Game1.currentLocation.IsTileBlockedBy(new Vector2(gameX, gameY), ignorePassables: CollisionMask.All) || Game1.currentLocation.isWaterTile(gameX, gameY)) {
+                    if (gameLocation.IsTileBlockedBy(new Vector2(gameX, gameY), ignorePassables: CollisionMask.All) || gameLocation.isWaterTile(gameX, gameY)) {
                         walkableTiles[i, j] = new SimpleTile(i - 1, j - 1, SimpleTile.TileType.Blocked);
                     }
                     else {
@@ -321,7 +324,7 @@ namespace BotPlay {
             }
 
             // Add warp tiles
-            foreach (Warp warp in Game1.currentLocation.warps) {
+            foreach (Warp warp in gameLocation.warps) {
                 // These translations between game coordinates and our coordinates are dangerous. Easy to forget/get it wrong.
                 walkableTiles[warp.X + 1, warp.Y + 1] = new SimpleTile(warp.X, warp.Y, SimpleTile.TileType.WarpPoint);
             }
