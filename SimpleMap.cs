@@ -10,27 +10,6 @@ using xTile;
 
 namespace BotPlay {
     internal class SimpleMap {
-        // TODO: Move HybridCoord out into it's own class and reuse it in PathFinder
-        private class HybridCoord {
-            public (int X, int Y) Game { get; }
-            public (int X, int Y) SimpleMap { get; }
-
-            public static HybridCoord FromGameCoord(int gameX, int gameY) {
-                return new HybridCoord((gameX, gameY), (gameX + 1, gameY+1));
-            }
-
-            public static HybridCoord FromSimpleMapCoord(int simpleMapX, int simpleMapY) {
-                // Note: it's valid to convert simple map index 0 to game index -1 because warp points etc are often represented by out of index numbers in game code.
-                return new HybridCoord((simpleMapX-1, simpleMapY-1), (simpleMapX, simpleMapY));
-            }
-
-            private HybridCoord((int x, int y) game, (int x, int y) simpleMap) {
-                // Pretty sure we don't need a deep copy here since we created the tuple ourselves from value types
-                this.Game = game;
-                this.SimpleMap = simpleMap;
-            }
-        }
-
         private readonly GameLocation sdvLocation;
         private SimpleTile[,]? mapTiles;
 
