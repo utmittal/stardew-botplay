@@ -16,16 +16,7 @@ namespace BotPlay {
     internal sealed class ModEntry : Mod {
         private bool playing = false;
 
-        IModHelper? helper;
-
-        private InputSimulator inputSimulator = new InputSimulator();
-        PathWalker pathWalker;
-
-        int targetX = 3;
-        int targetY = 12;
-        bool goToTarget = false;
-
-        EventHandler<UpdateTickedEventArgs> walkingEvent = null;
+        private InputSimulator inputSimulator = new();
 
         /*********
         ** Public methods
@@ -33,8 +24,6 @@ namespace BotPlay {
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
         public override void Entry(IModHelper helper) {
-            this.helper = helper;
-
             helper.Events.Input.ButtonPressed += this.OnButtonPressed;
         }
 
@@ -163,40 +152,13 @@ namespace BotPlay {
         //    }
         //}
 
-        private void GoToWarp(Location location) {
-            if (Game1.currentLocation.Name == location.Value) {
-                Log($"Already at {location.Value}. Not moving.");
-                return;
-            }
-
-            List<Warp> warps = NavUtil.FindWarpsTo(location);
-            if (warps.Count == 0) {
-                Log($"Could not find any warps to {location.Value}. Not moving.");
-                return;
-            }
-
-            // Choose any of the warps, we don't care
-            Warp warp = warps.First();
-
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            SimpleMap currentMap = new SimpleMap(Game1.currentLocation);
-            PathFinder pathFinder = new PathFinder(currentMap);
-            var pathToWarp = pathFinder.FindPath(((int)Game1.player.Tile.X, (int)Game1.player.Tile.Y), (warp.X, warp.Y));
-            stopwatch.Stop();
-            Log($"PathFinding for {location.Value} took {stopwatch.ElapsedMilliseconds}");
-
-            PathWalker pathWalker = new PathWalker(pathToWarp, inputSimulator, helper.Events.GameLoop, this.Monitor);
-            pathWalker.InitiateWalk();
-        }
-
         private void Play() {
-            GoToWarp(Location.FARM);
+            NavUtil.GoToWarp(Location.FARM, inputSimulator, this.Helper.Events.GameLoop,this.Monitor);
         }
 
         private void InitInputSimulator() {
             IReflectedField<IInputSimulator>? reflectedInputSimulator =
-                helper?.Reflection.GetField<IInputSimulator>(typeof(Game1), "inputSimulator", true);
+                this.Helper.Reflection.GetField<IInputSimulator>(typeof(Game1), "inputSimulator", true);
             if (reflectedInputSimulator?.GetValue() == null) {
                 Log("Initializing reflected input simulator.");
                 reflectedInputSimulator?.SetValue(inputSimulator);
@@ -205,7 +167,7 @@ namespace BotPlay {
 
         private void CleanupInputSimulator() {
             IReflectedField<IInputSimulator>? reflectedInputSimulator =
-                helper?.Reflection.GetField<IInputSimulator>(typeof(Game1), "inputSimulator", true);
+                this.Helper.Reflection.GetField<IInputSimulator>(typeof(Game1), "inputSimulator", true);
             if (reflectedInputSimulator?.GetValue() != null) {
                 Log("Deinitializing reflected input simulator.");
                 reflectedInputSimulator?.FieldInfo.SetValue(reflectedInputSimulator.GetValue(), null);
