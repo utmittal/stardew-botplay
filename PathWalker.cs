@@ -21,6 +21,9 @@ namespace BotPlay {
             None, Up, UpRight, Right, DownRight, Down, DownLeft, Left, UpLeft
         }
 
+        private static PathWalker? singletonInstance = null;
+        private static readonly object mutex = new();
+
         private readonly InputSimulator inputSimulator;
         private readonly IGameLoopEvents gameLoopEvents;
         private readonly IMonitor monitor;
@@ -29,8 +32,9 @@ namespace BotPlay {
         private Direction currentDirection = Direction.None;
         private SimpleTile nextTile;
 
-        private static PathWalker? singletonInstance = null;
-        private static readonly object mutex = new();
+        public bool IsWalking {
+            get; private set;
+        } = false;
 
         public static PathWalker Instance {
             get {
@@ -60,6 +64,7 @@ namespace BotPlay {
         public void InitiateWalk(List<SimpleTile> pathToWalk) {
             if (pathToWalk.Count == 0) {
                 monitor.Log($"Empty path provided. Not moving.",LogLevel.Warn);
+                StopGracefully();
                 return;
             }
 
@@ -68,9 +73,11 @@ namespace BotPlay {
             SimpleTile origin = nextTile;
             if (origin.X != Game1.player.Tile.X || origin.Y != Game1.player.Tile.Y) {
                 monitor.Log($"Current player location: {Game1.player.Tile.X}, {Game1.player.Tile.Y} did not match path origin: {origin.X},{origin.Y}. Not moving.",LogLevel.Warn);
+                StopGracefully();
                 return;
             }
 
+            this.IsWalking = true;
             monitor.Log($"Adding walking event handler.");
             // Remove first to ensure we don't hook it up multiple times
             gameLoopEvents.UpdateTicked -= this.GameLoop_UpdateTicked_WalkPath;
@@ -113,6 +120,7 @@ namespace BotPlay {
         private void StopGracefully() {
             currentDirection = Direction.None;
             UpdateInput(Direction.None);
+            this.IsWalking = false;
             monitor.Log($"Removing walking event handler.");
             gameLoopEvents.UpdateTicked -= this.GameLoop_UpdateTicked_WalkPath;
         }
