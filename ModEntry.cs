@@ -37,41 +37,6 @@ namespace BotPlay {
             helper.Events.Input.ButtonPressed += this.OnButtonPressed;
         }
 
-        private void GameLoop_UpdateTicked(object? sender, UpdateTickedEventArgs e) {
-            // ignore if player hasn't loaded a save yet
-            if (!Context.IsWorldReady)
-                return;
-
-            if (pathWalker != null && pathWalker.HasWalkingEnded() && walkingEvent != null) {
-                Log("------------ removed walking event ------------");
-                helper.Events.GameLoop.UpdateTicked -= walkingEvent;
-                walkingEvent = null;
-            }
-
-            //GlobeTrotting();
-        }
-
-        private void GlobeTrotting() {
-            if (Context.IsPlayerFree && walkingEvent == null) {
-                if (Game1.currentLocation.Name == "Farm") {
-                    GoToWarp("BusStop");
-                }
-                if (Game1.currentLocation.Name == "BusStop") {
-                    GoToWarp("Town");
-                }
-                if (Game1.currentLocation.Name == "Town") {
-                    GoToWarp("Mountain");
-                }
-                if (Game1.currentLocation.Name == "Mountain") {
-                    GoToWarp("Backwoods");
-                }
-                if (Game1.currentLocation.Name == "Backwoods") {
-                    GoToWarp("Farm");
-                }
-            }
-        }
-
-
         /*********
         ** Private methods
         *********/
@@ -120,6 +85,40 @@ namespace BotPlay {
             foreach (var deb in Game1.currentLocation.Objects) {
                 foreach (var ob2 in deb) {
                     Log($"{ob2.Key}: {ob2.Value.Name}");
+                }
+            }
+        }
+
+        private void GameLoop_UpdateTicked(object? sender, UpdateTickedEventArgs e) {
+            // ignore if player hasn't loaded a save yet
+            if (!Context.IsWorldReady)
+                return;
+
+            if (pathWalker != null && pathWalker.HasWalkingEnded() && walkingEvent != null) {
+                Log("------------ removed walking event ------------");
+                helper.Events.GameLoop.UpdateTicked -= walkingEvent;
+                walkingEvent = null;
+            }
+
+            //GlobeTrotting();
+        }
+
+        private void GlobeTrotting() {
+            if (Context.IsPlayerFree && walkingEvent == null) {
+                if (Game1.currentLocation.Name == "Farm") {
+                    GoToWarp("BusStop");
+                }
+                if (Game1.currentLocation.Name == "BusStop") {
+                    GoToWarp("Town");
+                }
+                if (Game1.currentLocation.Name == "Town") {
+                    GoToWarp("Mountain");
+                }
+                if (Game1.currentLocation.Name == "Mountain") {
+                    GoToWarp("Backwoods");
+                }
+                if (Game1.currentLocation.Name == "Backwoods") {
+                    GoToWarp("Farm");
                 }
             }
         }
