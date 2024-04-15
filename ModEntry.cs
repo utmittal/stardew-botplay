@@ -56,15 +56,18 @@ namespace BotPlay {
                     playing = true;
                     Log("Started playing.");
                     InitInputSimulator();
-                    GoToWarp("Farm");
+                    //GoToWarp("Farm");
                     Play();
-                    helper.Events.GameLoop.UpdateTicked += GameLoop_UpdateTicked;
+                    helper.Events.GameLoop.UpdateTicked += GlobeTrotter;
                 }
                 else if (playing == true) {
                     playing = false;
-                    cleanupInputSimulator();
-                    helper.Events.GameLoop.UpdateTicked -= walkingEvent;
-                    helper.Events.GameLoop.UpdateTicked -= GameLoop_UpdateTicked;
+                    CleanupInputSimulator();
+                    if (walkingEvent != null) {
+                        walkingEvent = null;
+                        helper.Events.GameLoop.UpdateTicked -= walkingEvent;
+                    }
+                    helper.Events.GameLoop.UpdateTicked -= GlobeTrotter;
                     Log("Stopped playing.");
                     return;
                 }
@@ -76,93 +79,18 @@ namespace BotPlay {
         }
 
         private void CodeExplore() {
-            foreach (var feature in Game1.currentLocation.terrainFeatures) {
-                foreach (var f2 in feature) {
-                    Log($"{f2.Key}: {f2.Value}");
-                }
-            }
+            //foreach (var feature in Game1.currentLocation.terrainFeatures) {
+            //    foreach (var f2 in feature) {
+            //        Log($"{f2.Key}: {f2.Value}");
+            //    }
+            //}
 
-            foreach (var deb in Game1.currentLocation.Objects) {
-                foreach (var ob2 in deb) {
-                    Log($"{ob2.Key}: {ob2.Value.Name}");
-                }
-            }
-        }
+            //foreach (var deb in Game1.currentLocation.Objects) {
+            //    foreach (var ob2 in deb) {
+            //        Log($"{ob2.Key}: {ob2.Value.Name}");
+            //    }
+            //}
 
-        private void GameLoop_UpdateTicked(object? sender, UpdateTickedEventArgs e) {
-            // ignore if player hasn't loaded a save yet
-            if (!Context.IsWorldReady)
-                return;
-
-            if (pathWalker != null && pathWalker.HasWalkingEnded() && walkingEvent != null) {
-                Log("------------ removed walking event ------------");
-                helper.Events.GameLoop.UpdateTicked -= walkingEvent;
-                walkingEvent = null;
-            }
-
-            //GlobeTrotting();
-        }
-
-        private void GlobeTrotting() {
-            if (Context.IsPlayerFree && walkingEvent == null) {
-                if (Game1.currentLocation.Name == "Farm") {
-                    GoToWarp("BusStop");
-                }
-                if (Game1.currentLocation.Name == "BusStop") {
-                    GoToWarp("Town");
-                }
-                if (Game1.currentLocation.Name == "Town") {
-                    GoToWarp("Mountain");
-                }
-                if (Game1.currentLocation.Name == "Mountain") {
-                    GoToWarp("Backwoods");
-                }
-                if (Game1.currentLocation.Name == "Backwoods") {
-                    GoToWarp("Farm");
-                }
-            }
-        }
-
-        private void GoToWarp(string destinationWarp) {
-            Warp farmWarp = FindWarp(destinationWarp);
-
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            SimpleMap currentMap = new SimpleMap(Game1.currentLocation);
-            PathFinder pathFinder = new PathFinder(currentMap);
-            var exitFarmhousePath = pathFinder.FindPath(((int)Game1.player.Tile.X, (int)Game1.player.Tile.Y), (farmWarp.X, farmWarp.Y));
-            stopwatch.Stop();
-            Log($"PathFinding for {destinationWarp} took {stopwatch.ElapsedMilliseconds}");
-
-            WalkAlongPath(exitFarmhousePath);
-        }
-
-        // Finds (any) warp point to specified target. Returns null if it can't find one.
-        private Warp FindWarp(string targetName) {
-            List<string> warpList = new List<string>();
-            foreach (Warp warp in Game1.currentLocation.warps) {
-                warpList.Add(warp.TargetName);
-                if (warp.TargetName == targetName) {
-                    return warp;
-                }
-            }
-            throw new InvalidOperationException($"Could not find specified warp: {targetName}. Available warps: {string.Join(",",warpList)}");
-        }
-
-        private void WalkAlongPath(List<SimpleTile> pathTilesList) {
-            var path = new Queue<SimpleTile>(pathTilesList);
-
-            SimpleTile origin = path.Peek();
-            if (origin.X != Game1.player.Tile.X || origin.Y != Game1.player.Tile.Y) {
-                throw new InvalidOperationException($"Current player location: {Game1.player.Tile.X}, {Game1.player.Tile.Y} did not match path origin: {origin.X},{origin.Y}");
-            }
-
-            pathWalker = new PathWalker(path, inputSimulator, this.Monitor);
-            this.walkingEvent = pathWalker.GameLoop_UpdateTicked_WalkPath;
-            helper.Events.GameLoop.UpdateTicked += this.walkingEvent;
-        }
-
-        private void Play() {
             Log($"current location name {Game1.currentLocation.Name}");
             int playerX = (int)Game1.player.Tile.X;
             int playerY = (int)Game1.player.Tile.Y;
@@ -177,16 +105,118 @@ namespace BotPlay {
                 SimpleMapVisualizer.VisualizeMap(currentMap, routeToWarp, this.Monitor);
             }
 
-            Log("Layers:");
-            foreach (Layer layer in Game1.currentLocation.map.Layers) {
-                Log($"\t{layer.Id}");
-                Log($"\t\tDescription: {layer.Description}");
-                Log($"\t\tSize: {layer.LayerWidth}x{layer.LayerHeight}");
-                Log($"\t\tProperties:");
-                foreach (var property in layer.Properties) {
-                    Log($"\t\t\t{property.Key}: {property.Value.ToString()}");
+            //Log("Layers:");
+            //foreach (Layer layer in Game1.currentLocation.map.Layers) {
+            //    Log($"\t{layer.Id}");
+            //    Log($"\t\tDescription: {layer.Description}");
+            //    Log($"\t\tSize: {layer.LayerWidth}x{layer.LayerHeight}");
+            //    Log($"\t\tProperties:");
+            //    foreach (var property in layer.Properties) {
+            //        Log($"\t\t\t{property.Key}: {property.Value.ToString()}");
+            //    }
+            //}
+
+            Log($"Name: {Game1.currentLocation.Name}");
+            Log($"Unique Name: {Game1.currentLocation.uniqueName}");
+            Log($"NameOrUnique Name: {Game1.currentLocation.NameOrUniqueName}");
+            Log($"Display Name: {Game1.currentLocation.DisplayName}");
+            Log($"Parent Name: {Game1.currentLocation.parentLocationName}");
+        }
+
+        private void GlobeTrotter(object? sender, UpdateTickedEventArgs e) {
+            // ignore if player hasn't loaded a save yet
+            if (!Context.IsWorldReady)
+                return;
+
+            if (pathWalker != null && pathWalker.HasWalkingEnded() && walkingEvent != null) {
+                Log("------------ removed walking event ------------");
+                helper.Events.GameLoop.UpdateTicked -= walkingEvent;
+                walkingEvent = null;
+            }
+
+            if (Context.IsPlayerFree && walkingEvent == null) {
+                if (Game1.currentLocation.Name == Location.FARMHOUSE.Value) {
+                    GoToWarp(Location.FARM);
+                }
+                if (Game1.currentLocation.Name == Location.FARM.Value) {
+                    GoToWarp(Location.BUSSTOP);
+                }
+                if (Game1.currentLocation.Name == Location.BUSSTOP.Value) {
+                    GoToWarp(Location.TOWN);
+                }
+                if (Game1.currentLocation.Name == Location.TOWN.Value) {
+                    GoToWarp(Location.MOUNTAIN);
+                }
+                if (Game1.currentLocation.Name == Location.MOUNTAIN.Value) {
+                    GoToWarp(Location.BACKWOODS);
+                }
+                if (Game1.currentLocation.Name == Location.BACKWOODS.Value) {
+                    GoToWarp(Location.FARM);
                 }
             }
+        }
+
+        private void GoToWarp(Location location) {
+            if (Game1.currentLocation.Name == location.Value) {
+                Log($"Already at {location.Value}. Not moving.");
+                return;
+            }
+
+            List<Warp> warps = FindWarps(location);
+            if (warps.Count == 0) {
+                Log($"Could not find any warps to {location.Value}. Not moving.");
+                return;
+            }
+
+            // Choose any of the warps, we don't care
+            Warp warp = warps.First();
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            SimpleMap currentMap = new SimpleMap(Game1.currentLocation);
+            PathFinder pathFinder = new PathFinder(currentMap);
+            var exitFarmhousePath = pathFinder.FindPath(((int)Game1.player.Tile.X, (int)Game1.player.Tile.Y), (warp.X, warp.Y));
+            stopwatch.Stop();
+            Log($"PathFinding for {location.Value} took {stopwatch.ElapsedMilliseconds}");
+
+            WalkAlongPath(exitFarmhousePath);
+        }
+
+        /// <summary>
+        /// Finds all warps to specified location from current game location.
+        /// </summary>
+        /// <param name="targetName"></param>
+        /// <returns></returns>
+        private static List<Warp> FindWarps(Location targetName) {
+            List<Warp> warpList = new();
+            foreach (Warp warp in Game1.currentLocation.warps) {
+                if (warp.TargetName == targetName.Value) {
+                    warpList.Add(warp);
+                }
+            }
+            return warpList;
+        }
+
+        private void WalkAlongPath(List<SimpleTile> pathTilesList) {
+            if(pathTilesList.Count == 0) {
+                Log($"Empth path provided to WalkAlongPath. Not moving.");
+                return;
+                }
+
+            var path = new Queue<SimpleTile>(pathTilesList);
+
+            SimpleTile origin = path.Peek();
+            if (origin.X != Game1.player.Tile.X || origin.Y != Game1.player.Tile.Y) {
+                throw new InvalidOperationException($"Current player location: {Game1.player.Tile.X}, {Game1.player.Tile.Y} did not match path origin: {origin.X},{origin.Y}");
+            }
+
+            pathWalker = new PathWalker(path, inputSimulator, this.Monitor);
+            this.walkingEvent = pathWalker.GameLoop_UpdateTicked_WalkPath;
+            helper.Events.GameLoop.UpdateTicked += this.walkingEvent;
+        }
+
+        private void Play() {
+
 
             //MapGraph.VisualizeMap(this.Monitor);
             //goToTarget = true;
@@ -201,7 +231,7 @@ namespace BotPlay {
             }
         }
 
-        private void cleanupInputSimulator() {
+        private void CleanupInputSimulator() {
             IReflectedField<IInputSimulator>? reflectedInputSimulator =
                 helper?.Reflection.GetField<IInputSimulator>(typeof(Game1), "inputSimulator", true);
             if (reflectedInputSimulator?.GetValue() != null) {
