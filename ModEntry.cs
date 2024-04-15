@@ -24,12 +24,20 @@ namespace BotPlay {
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
         public override void Entry(IModHelper helper) {
             helper.Events.Input.ButtonPressed += this.OnButtonPressed;
+            helper.Events.GameLoop.UpdateTicked += this.OnUpdateTicked;
 
             Setup();
         }
-
         private void Setup() {
             PathWalker.InitPathWalker(InputSimulator.Instance, this.Helper.Events.GameLoop, this.Monitor);
+        }
+
+        private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e) {
+            if (!playing) {
+                return;
+            }
+
+            Play();
         }
         
         /// <summary>Raised after the player presses a button on the keyboard, controller, or mouse.</summary>
@@ -49,7 +57,7 @@ namespace BotPlay {
                     Log("Started playing.");
                     InitInputSimulator();
                     //GoToWarp("Farm");
-                    Play();
+                    //Play();
                     //helper.Events.GameLoop.UpdateTicked += GlobeTrotter;
                 }
                 else if (playing == true) {
@@ -133,7 +141,9 @@ namespace BotPlay {
 
         private void Play() {
             // Go to farm if possible
-            NavUtil.GoToWarp(Location.FARM, this.Monitor);
+            if (!PathWalker.Instance.IsWalking) {
+                NavUtil.GoToWarp(Location.FARM, this.Monitor);
+            }
 
             // Find an empty chest
             if (Game1.currentLocation.Name == Location.FARM.Value) {
