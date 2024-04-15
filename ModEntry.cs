@@ -17,8 +17,6 @@ namespace BotPlay {
     internal sealed class ModEntry : Mod {
         private bool playing = false;
 
-        private InputSimulator inputSimulator = new();
-
         /*********
         ** Public methods
         *********/
@@ -26,11 +24,14 @@ namespace BotPlay {
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
         public override void Entry(IModHelper helper) {
             helper.Events.Input.ButtonPressed += this.OnButtonPressed;
+
+            Setup();
         }
 
-        /*********
-        ** Private methods
-        *********/
+        private void Setup() {
+            PathWalker.InitPathWalker(InputSimulator.Instance, this.Helper.Events.GameLoop, this.Monitor);
+        }
+        
         /// <summary>Raised after the player presses a button on the keyboard, controller, or mouse.</summary>
         /// <param name="sender">The event sender.</param>
         /// <param name="e">The event data.</param>
@@ -132,7 +133,7 @@ namespace BotPlay {
 
         private void Play() {
             // Go to farm if possible
-            NavUtil.GoToWarp(Location.FARM, inputSimulator, this.Helper.Events.GameLoop, this.Monitor);
+            NavUtil.GoToWarp(Location.FARM, this.Monitor);
 
             // Find an empty chest
             if (Game1.currentLocation.Name == Location.FARM.Value) {
@@ -189,7 +190,7 @@ namespace BotPlay {
                 this.Helper.Reflection.GetField<IInputSimulator>(typeof(Game1), "inputSimulator", true);
             if (reflectedInputSimulator?.GetValue() == null) {
                 Log("Initializing reflected input simulator.");
-                reflectedInputSimulator?.SetValue(inputSimulator);
+                reflectedInputSimulator?.SetValue(InputSimulator.Instance);
             }
         }
 

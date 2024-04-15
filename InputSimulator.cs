@@ -6,9 +6,30 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace BotPlay {
+    /// <summary>
+    /// InputSimulator that we will use for reflection inside SDV code. This is a singleton
+    /// because there is no reason to have multiple of these, but also because it's used to
+    /// create PathWalker which is itself a singleton.
+    /// 
+    /// TODO: It feels a little fishy to have this tightly coupled to PathWalker and be a singleton.
+    /// </summary>
     internal class InputSimulator : IInputSimulator {
 
-        public InputSimulator() {
+        private static InputSimulator? singletonInstance = null;
+        private static readonly object mutex = new();
+
+        private InputSimulator() {
+        }
+
+        public static InputSimulator Instance {
+            get {
+                if (singletonInstance == null) {
+                    lock (mutex) {
+                        singletonInstance ??= new InputSimulator();
+                    }
+                }
+                return singletonInstance;
+            }
         }
 
         public bool ActionButtonPressed { get; set; } = false;
@@ -30,19 +51,19 @@ namespace BotPlay {
         public bool MoveRightHeld { get; set; } = false;
         public bool MoveLeftHeld { get; set; } = false;
         public void SimulateInput(
-            ref bool actionButtonPressed, 
-            ref bool switchToolButtonPressed, 
-            ref bool useToolButtonPressed, 
-            ref bool useToolButtonReleased, 
-            ref bool addItemToInventoryButtonPressed, 
-            ref bool cancelButtonPressed, 
-            ref bool moveUpPressed, 
-            ref bool moveRightPressed, 
-            ref bool moveLeftPressed, 
-            ref bool moveDownPressed, 
-            ref bool moveUpReleased, 
-            ref bool moveRightReleased, 
-            ref bool moveLeftReleased, 
+            ref bool actionButtonPressed,
+            ref bool switchToolButtonPressed,
+            ref bool useToolButtonPressed,
+            ref bool useToolButtonReleased,
+            ref bool addItemToInventoryButtonPressed,
+            ref bool cancelButtonPressed,
+            ref bool moveUpPressed,
+            ref bool moveRightPressed,
+            ref bool moveLeftPressed,
+            ref bool moveDownPressed,
+            ref bool moveUpReleased,
+            ref bool moveRightReleased,
+            ref bool moveLeftReleased,
             ref bool moveDownReleased,
             ref bool moveUpHeld,
             ref bool moveRightHeld,

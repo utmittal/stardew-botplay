@@ -9,34 +9,62 @@ using System.Threading.Tasks;
 using xTile.Tiles;
 
 namespace BotPlay {
+    /// <summary>
+    /// Singleton class PathWalker. Since walking along a path involves specifying continuous
+    /// game input, it's safer to have only one instance of this so that we don't accidentally
+    /// try to add multiple event handlers for walking.
+    /// 
+    /// You can access the singleton instance using PathWalker.Instance.
+    /// </summary>
     internal class PathWalker {
         private enum Direction {
             None, Up, UpRight, Right, DownRight, Down, DownLeft, Left, UpLeft
         }
 
-        private readonly Queue<SimpleTile> path;
         private readonly InputSimulator inputSimulator;
         private readonly IGameLoopEvents gameLoopEvents;
         private readonly IMonitor monitor;
-        private Direction currentDirection;
 
+        private Queue<SimpleTile> path = new();
+        private Direction currentDirection = Direction.None;
         private SimpleTile nextTile;
 
-        public PathWalker(List<SimpleTile> path, InputSimulator inputSimulator, IGameLoopEvents gameLoopEvents,IMonitor monitor) {
-            this.path = new(path);
+        private static PathWalker? singletonInstance = null;
+        private static readonly object mutex = new();
+
+        public static PathWalker Instance {
+            get {
+                if (singletonInstance == null) {
+                    throw new InvalidOperationException("PathWalker instance does not exist yet. Ideally this should never happen because PathWalker should be initialized as soon as the Mod starts.");
+                }
+                return singletonInstance;
+            }
+        }
+
+        public static void InitPathWalker(InputSimulator inputSimulator, IGameLoopEvents gameLoopEvents, IMonitor monitor) {
+            // Thread safety to ensure that this class can't accidentally be created twice.
+            lock (mutex) {
+                if (singletonInstance != null) {
+                    throw new InvalidOperationException("PathWalker instance already exists. Use PathWalker.Instance to access it.");
+                }
+                singletonInstance = new PathWalker(inputSimulator, gameLoopEvents, monitor);
+            }
+        }
+
+        private PathWalker(InputSimulator inputSimulator, IGameLoopEvents gameLoopEvents, IMonitor monitor) {
             this.inputSimulator = inputSimulator;
-            this.currentDirection = Direction.None;
             this.gameLoopEvents = gameLoopEvents;
             this.monitor = monitor;
         }
 
-        public void InitiateWalk() {
-            if (this.path.Count == 0) {
+        public void InitiateWalk(List<SimpleTile> pathToWalk) {
+            if (pathToWalk.Count == 0) {
                 monitor.Log($"Empty path provided. Not moving.",LogLevel.Warn);
                 return;
             }
 
-            nextTile = path.Dequeue();
+            this.path = new(pathToWalk);
+            nextTile = this.path.Dequeue();
             SimpleTile origin = nextTile;
             if (origin.X != Game1.player.Tile.X || origin.Y != Game1.player.Tile.Y) {
                 monitor.Log($"Current player location: {Game1.player.Tile.X}, {Game1.player.Tile.Y} did not match path origin: {origin.X},{origin.Y}. Not moving.",LogLevel.Warn);

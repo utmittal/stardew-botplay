@@ -33,7 +33,7 @@ namespace BotPlay {
         /// <param name="inputSimulator">Input simulator object to pass to PathWalker</param>
         /// <param name="gameLoopEventHandler">IGameLoopEvents object to hook into</param>
         /// <param name="monitor">SMAPI monitor for logging</param>
-        public static void GoToWarp(Location location, InputSimulator inputSimulator, IGameLoopEvents gameLoopEventHandler, IMonitor monitor) {
+        public static void GoToWarp(Location location, IMonitor monitor) {
             if (Game1.currentLocation.Name == location.Value) {
                 monitor.Log($"Already at {location.Value}. Not moving.",LogLevel.Debug);
                 return;
@@ -56,8 +56,7 @@ namespace BotPlay {
             stopwatch.Stop();
             monitor.Log($"PathFinding for {location.Value} took {stopwatch.ElapsedMilliseconds}");
 
-            PathWalker pathWalker = new PathWalker(pathToWarp, inputSimulator, gameLoopEventHandler, monitor);
-            pathWalker.InitiateWalk();
+            PathWalker.Instance.InitiateWalk(pathToWarp);
         }
     }
 }
