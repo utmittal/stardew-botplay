@@ -11,6 +11,7 @@ using xTile.Layers;
 using System.Diagnostics;
 using xTile.Dimensions;
 using StardewValley.Objects;
+using StardewValley.Tools;
 
 namespace BotPlay {
     /// <summary>The mod entry point.</summary>
@@ -128,12 +129,25 @@ namespace BotPlay {
             //Log($"Farmer bounding box - left,right,up,down: {boundingBox.Left},{boundingBox.Right},{boundingBox.Top},{boundingBox.Bottom}");
             //Log($"Farm xoffset,yoffset: {Game1.player.xOffset},{Game1.player.yOffset}");
 
-            foreach (var item in Game1.currentLocation.Objects) {
-                foreach (var item2 in item) {
-                    Log($"Item: {item2.Key} - {item2.Value.Name}");
-                    if (item2.Value.Name == "Chest") {
-                        Log($"\t{item2.Value is Chest}");
-                        Log($"\t{((Chest)item2.Value).isEmpty()}");
+            //foreach (var item in Game1.currentLocation.Objects) {
+            //    foreach (var item2 in item) {
+            //        Log($"Item: {item2.Key} - {item2.Value.Name}");
+            //        if (item2.Value.Name == "Chest") {
+            //            Log($"\t{item2.Value is Chest}");
+            //            Log($"\t{((Chest)item2.Value).isEmpty()}");
+            //        }
+            //    }
+            //}
+
+            // I think we should use the input simulator instead to cycle through the inventory
+            Log($"Current item: {Game1.player.CurrentItem.Name}");
+            Log($"Current tool: {Game1.player.CurrentTool.Name}");
+            Item pickaxe = new Pickaxe();
+            foreach (var item in Game1.player.Items) {
+                if (item != null) {
+                    Log($"{item.Name}");
+                    if (item.Name == "Pickaxe") {
+                        pickaxe = item;
                     }
                 }
             }
