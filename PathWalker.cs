@@ -16,33 +16,50 @@ namespace BotPlay {
 
         Queue<SimpleTile> path;
         InputSimulator inputSimulator;
-        SimpleTile nextTile;
         Direction currentDirection;
+        IGameLoopEvents gameLoopEvents;
         IMonitor monitor;
 
-        public PathWalker(Queue<SimpleTile> path, InputSimulator inputSimulator, IMonitor monitor) {
-            this.path = path;
+        SimpleTile nextTile;
+
+        public PathWalker(List<SimpleTile> path, InputSimulator inputSimulator, IGameLoopEvents gameLoopEvents,IMonitor monitor) {
+            this.path = new(path);
             this.inputSimulator = inputSimulator;
-            this.nextTile = this.path.Dequeue();
             this.currentDirection = Direction.None;
+            this.gameLoopEvents = gameLoopEvents;
             this.monitor = monitor;
         }
 
-        public bool HasWalkingEnded() {
-            // the 1 is to account for warp points not being dequeued. But this needs to be more intelligent.
-            if (this.path.Count <= 1 && this.currentDirection == Direction.None) {
-                return true;
+        public void InitiateWalk() {
+            if (this.path.Count == 0) {
+                monitor.Log($"Empth path provided. Not moving.",LogLevel.Warn);
+                return;
             }
-            return false;
+
+            nextTile = path.Dequeue();
+            SimpleTile origin = nextTile;
+            if (origin.X != Game1.player.Tile.X || origin.Y != Game1.player.Tile.Y) {
+                monitor.Log($"Current player location: {Game1.player.Tile.X}, {Game1.player.Tile.Y} did not match path origin: {origin.X},{origin.Y}. Not moving.",LogLevel.Warn);
+                return;
+            }
+
+            monitor.Log($"Adding walking event handler.");
+            gameLoopEvents.UpdateTicked += this.GameLoop_UpdateTicked_WalkPath;
         }
 
         // diagonal walking is still a bit janky because the player keeps getting caught up on obstacles because of the float location for the player.
         // I think we need more smarts for "PlayerAtLocation" by checking the player is fully "inside the tile".
-        public void GameLoop_UpdateTicked_WalkPath(object? sender, UpdateTickedEventArgs e) {
+        private void GameLoop_UpdateTicked_WalkPath(object? sender, UpdateTickedEventArgs e) {
             (int x, int y) player = ((int)Math.Round(Game1.player.Tile.X), (int)Math.Round(Game1.player.Tile.Y));
             //monitor.Log($"Player location: {player.x},{player.y}");
             //monitor.Log($"Next tile: {nextTile.X},{nextTile.Y}");
             //monitor.Log($"Current direction: {currentDirection}");
+
+            // Stop moving if we go through a warp point or end up off course
+            if (PlayerOffCourse(player, nextTile)) {
+                monitor.Log($"Next tile ({nextTile.X},{nextTile.Y}) is not in a 1 tile circle of the player ({player.x},{player.y}). Either player is off course or player used a warp point. Stopping movement.");
+                StopGracefully();
+            }
 
             if (PlayerAtLocation(player, nextTile)) {
                 if (path.Count > 0) {
@@ -57,18 +74,18 @@ namespace BotPlay {
                     }
                 }
                 else if (path.Count == 0) {
-                    UpdateInput(Direction.None);
-                    currentDirection = Direction.None;
-                    //monitor.Log($"Current direction: {currentDirection}");
+                    StopGracefully();
+                    return;
                 }
             }
+        }
 
-            // kill switch if we end up of course
-            if (PlayerOffCourse(player, nextTile)) {
-                currentDirection = Direction.None;
-                UpdateInput(Direction.None);
-                monitor.Log($"Next tile ({nextTile.X},{nextTile.Y}) is not in a 1 tile circle of the player ({player.x},{player.y}). Setting direction to None.");
-            }
+        private void StopGracefully() {
+            currentDirection = Direction.None;
+            UpdateInput(Direction.None);
+            // TODO: What happens if the eventhandler is not already in the list? Does it just throw an exception?
+            monitor.Log($"Removing walking event handler.");
+            gameLoopEvents.UpdateTicked -= this.GameLoop_UpdateTicked_WalkPath;
         }
 
         private bool PlayerAtLocation((int x, int y) player, SimpleTile tile) {

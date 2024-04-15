@@ -66,13 +66,12 @@ namespace BotPlay {
             }
 
             List<SimpleTile> path = new List<SimpleTile>();
-            // Add origin tile into the path
-            path.Insert(0, new SimpleTile(origin.x, origin.y, SimpleTile.TileType.Empty));
             SimpleTile backtrackTile = destinationTile;
             while (backtrackTile != originTile) {
                 path.Insert(0, backtrackTile);
                 backtrackTile = prevTile[backtrackTile];
             }
+            // Add origin tile into the path
             path.Insert(0, originTile);
 
             return path;
