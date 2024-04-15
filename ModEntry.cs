@@ -91,19 +91,19 @@ namespace BotPlay {
             //    }
             //}
 
-            Log($"current location name {Game1.currentLocation.Name}");
-            int playerX = (int)Game1.player.Tile.X;
-            int playerY = (int)Game1.player.Tile.Y;
-            Log($"current location coordinate: {playerX},{playerY}");
-            Log("warp locations:");
-            foreach (Warp warp in Game1.currentLocation.warps) {
-                Log($"\t{warp.X},{warp.Y}: {warp.TargetName}");
-                Log("\tPath from player: ");
-                SimpleMap currentMap = new SimpleMap(Game1.currentLocation);
-                PathFinder pathFinder = new PathFinder(currentMap);
-                List<SimpleTile> routeToWarp = pathFinder.FindPath((playerX, playerY), (warp.X, warp.Y));
-                SimpleMapVisualizer.VisualizeMap(currentMap, routeToWarp, this.Monitor);
-            }
+            //Log($"current location name {Game1.currentLocation.Name}");
+            //int playerX = (int)Game1.player.Tile.X;
+            //int playerY = (int)Game1.player.Tile.Y;
+            //Log($"current location coordinate: {playerX},{playerY}");
+            //Log("warp locations:");
+            //foreach (Warp warp in Game1.currentLocation.warps) {
+            //    Log($"\t{warp.X},{warp.Y}: {warp.TargetName}");
+            //    Log("\tPath from player: ");
+            //    SimpleMap currentMap = new SimpleMap(Game1.currentLocation);
+            //    PathFinder pathFinder = new PathFinder(currentMap);
+            //    List<SimpleTile> routeToWarp = pathFinder.FindPath((playerX, playerY), (warp.X, warp.Y));
+            //    SimpleMapVisualizer.VisualizeMap(currentMap, routeToWarp, this.Monitor);
+            //}
 
             //Log("Layers:");
             //foreach (Layer layer in Game1.currentLocation.map.Layers) {
@@ -116,11 +116,17 @@ namespace BotPlay {
             //    }
             //}
 
-            Log($"Name: {Game1.currentLocation.Name}");
-            Log($"Unique Name: {Game1.currentLocation.uniqueName}");
-            Log($"NameOrUnique Name: {Game1.currentLocation.NameOrUniqueName}");
-            Log($"Display Name: {Game1.currentLocation.DisplayName}");
-            Log($"Parent Name: {Game1.currentLocation.parentLocationName}");
+            //Log($"Name: {Game1.currentLocation.Name}");
+            //Log($"Unique Name: {Game1.currentLocation.uniqueName}");
+            //Log($"NameOrUnique Name: {Game1.currentLocation.NameOrUniqueName}");
+            //Log($"Display Name: {Game1.currentLocation.DisplayName}");
+            //Log($"Parent Name: {Game1.currentLocation.parentLocationName}");
+
+            Log($"Farmer width, height: {Game1.player.FarmerSprite.SpriteWidth}, {Game1.player.FarmerSprite.SpriteHeight}");
+            Log($"Farmer pixel position: {Game1.player.Position.X}, {Game1.player.Position.Y}");
+            var boundingBox = Game1.player.GetBoundingBox();
+            Log($"Farmer bounding box - left,right,up,down: {boundingBox.Left},{boundingBox.Right},{boundingBox.Top},{boundingBox.Bottom}");
+            Log($"Farm xoffset,yoffset: {Game1.player.xOffset},{Game1.player.yOffset}");
         }
 
         private void GlobeTrotter(object? sender, UpdateTickedEventArgs e) {
