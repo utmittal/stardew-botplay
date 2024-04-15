@@ -10,6 +10,7 @@ using System.Diagnostics.CodeAnalysis;
 using xTile.Layers;
 using System.Diagnostics;
 using xTile.Dimensions;
+using StardewValley.Objects;
 
 namespace BotPlay {
     /// <summary>The mod entry point.</summary>
@@ -112,11 +113,21 @@ namespace BotPlay {
             //Log($"Display Name: {Game1.currentLocation.DisplayName}");
             //Log($"Parent Name: {Game1.currentLocation.parentLocationName}");
 
-            Log($"Farmer width, height: {Game1.player.FarmerSprite.SpriteWidth}, {Game1.player.FarmerSprite.SpriteHeight}");
-            Log($"Farmer pixel position: {Game1.player.Position.X}, {Game1.player.Position.Y}");
-            var boundingBox = Game1.player.GetBoundingBox();
-            Log($"Farmer bounding box - left,right,up,down: {boundingBox.Left},{boundingBox.Right},{boundingBox.Top},{boundingBox.Bottom}");
-            Log($"Farm xoffset,yoffset: {Game1.player.xOffset},{Game1.player.yOffset}");
+            //Log($"Farmer width, height: {Game1.player.FarmerSprite.SpriteWidth}, {Game1.player.FarmerSprite.SpriteHeight}");
+            //Log($"Farmer pixel position: {Game1.player.Position.X}, {Game1.player.Position.Y}");
+            //var boundingBox = Game1.player.GetBoundingBox();
+            //Log($"Farmer bounding box - left,right,up,down: {boundingBox.Left},{boundingBox.Right},{boundingBox.Top},{boundingBox.Bottom}");
+            //Log($"Farm xoffset,yoffset: {Game1.player.xOffset},{Game1.player.yOffset}");
+
+            foreach (var item in Game1.currentLocation.Objects) {
+                foreach (var item2 in item) {
+                    Log($"Item: {item2.Key} - {item2.Value.Name}");
+                    if (item2.Value.Name == "Chest") {
+                        Log($"\t{item2.Value is Chest}");
+                        Log($"\t{((Chest)item2.Value).isEmpty()}");
+                    }
+                }
+            }
         }
 
         //private void GlobeTrotter(object? sender, UpdateTickedEventArgs e) {
@@ -153,7 +164,7 @@ namespace BotPlay {
         //}
 
         private void Play() {
-            NavUtil.GoToWarp(Location.FARM, inputSimulator, this.Helper.Events.GameLoop,this.Monitor);
+            NavUtil.GoToWarp(Location.FARM, inputSimulator, this.Helper.Events.GameLoop, this.Monitor);
         }
 
         private void InitInputSimulator() {
