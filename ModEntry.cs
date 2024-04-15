@@ -35,8 +35,6 @@ namespace BotPlay {
             this.helper = helper;
 
             helper.Events.Input.ButtonPressed += this.OnButtonPressed;
-
-            helper.Events.GameLoop.UpdateTicked += GameLoop_UpdateTicked;
         }
 
         private void GameLoop_UpdateTicked(object? sender, UpdateTickedEventArgs e) {
@@ -95,11 +93,13 @@ namespace BotPlay {
                     InitInputSimulator();
                     GoToWarp("Farm");
                     Play();
+                    helper.Events.GameLoop.UpdateTicked += GameLoop_UpdateTicked;
                 }
                 else if (playing == true) {
                     playing = false;
                     cleanupInputSimulator();
                     helper.Events.GameLoop.UpdateTicked -= walkingEvent;
+                    helper.Events.GameLoop.UpdateTicked -= GameLoop_UpdateTicked;
                     Log("Stopped playing.");
                     return;
                 }
