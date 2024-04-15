@@ -130,6 +130,27 @@ namespace BotPlay {
             }
         }
 
+        private void Play() {
+            // Go to farm if possible
+            NavUtil.GoToWarp(Location.FARM, inputSimulator, this.Helper.Events.GameLoop, this.Monitor);
+
+            // Find an empty chest
+            if (Game1.currentLocation.Name == Location.FARM.Value) {
+                (int x, int y) emptyChestLocation = GetEmptyChestLocation();
+                Log($"Found empty chest at: {emptyChestLocation.x},{emptyChestLocation.y}");
+            }
+        }
+
+        private static (int x, int y) GetEmptyChestLocation() {
+            foreach (var obj in Game1.currentLocation.Objects.Pairs) {
+                if (obj.Value is Chest && ((Chest)obj.Value).isEmpty()) {
+                    return ((int)obj.Key.X, (int)obj.Key.Y);
+                }
+            }
+
+            return (-1, -1);
+        }
+
         //private void GlobeTrotter(object? sender, UpdateTickedEventArgs e) {
         //    // ignore if player hasn't loaded a save yet
         //    if (!Context.IsWorldReady)
@@ -162,10 +183,6 @@ namespace BotPlay {
         //        }
         //    }
         //}
-
-        private void Play() {
-            NavUtil.GoToWarp(Location.FARM, inputSimulator, this.Helper.Events.GameLoop, this.Monitor);
-        }
 
         private void InitInputSimulator() {
             IReflectedField<IInputSimulator>? reflectedInputSimulator =
