@@ -72,6 +72,8 @@ namespace BotPlay {
             }
 
             monitor.Log($"Adding walking event handler.");
+            // Remove first to ensure we don't hook it up multiple times
+            gameLoopEvents.UpdateTicked -= this.GameLoop_UpdateTicked_WalkPath;
             gameLoopEvents.UpdateTicked += this.GameLoop_UpdateTicked_WalkPath;
         }
 
@@ -111,7 +113,6 @@ namespace BotPlay {
         private void StopGracefully() {
             currentDirection = Direction.None;
             UpdateInput(Direction.None);
-            // TODO: What happens if the eventhandler is not already in the list? Does it just throw an exception?
             monitor.Log($"Removing walking event handler.");
             gameLoopEvents.UpdateTicked -= this.GameLoop_UpdateTicked_WalkPath;
         }
