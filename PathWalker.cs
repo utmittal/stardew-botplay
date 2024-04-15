@@ -14,13 +14,13 @@ namespace BotPlay {
             None, Up, UpRight, Right, DownRight, Down, DownLeft, Left, UpLeft
         }
 
-        Queue<SimpleTile> path;
-        InputSimulator inputSimulator;
-        Direction currentDirection;
-        IGameLoopEvents gameLoopEvents;
-        IMonitor monitor;
+        private readonly Queue<SimpleTile> path;
+        private readonly InputSimulator inputSimulator;
+        private readonly IGameLoopEvents gameLoopEvents;
+        private readonly IMonitor monitor;
+        private Direction currentDirection;
 
-        SimpleTile nextTile;
+        private SimpleTile nextTile;
 
         public PathWalker(List<SimpleTile> path, InputSimulator inputSimulator, IGameLoopEvents gameLoopEvents,IMonitor monitor) {
             this.path = new(path);
@@ -32,7 +32,7 @@ namespace BotPlay {
 
         public void InitiateWalk() {
             if (this.path.Count == 0) {
-                monitor.Log($"Empth path provided. Not moving.",LogLevel.Warn);
+                monitor.Log($"Empty path provided. Not moving.",LogLevel.Warn);
                 return;
             }
 
