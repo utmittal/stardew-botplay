@@ -20,6 +20,9 @@ namespace BotPlay {
             (this.adjacencyMatrix, this.tileNeighbours) = GenerateGraph();
         }
 
+        // Note: While A* will work well for this particular case (heuristic is 2d grid distance), it's not great for us in general because we will often be doing open ended searches. I.e. the goal is not known in advance.
+        // So I think some sort of mechanic where we apply the heuristic initially to distance but record whether it's a heuristic distance or not, so that if the actual distance is > heuristic distance, we can still update it properly.
+        // Actually, you are wrong, pretty sure we can straight up use A* here.
         public List<SimpleTile> FindPath((int x, int y) origin, (int x, int y) destination) {
             SimpleTile originTile = map.GetMapTiles()[origin.x + 1, origin.y + 1];
             SimpleTile destinationTile = map.GetMapTiles()[destination.x + 1, destination.y + 1];
