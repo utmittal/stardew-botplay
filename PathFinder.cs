@@ -16,7 +16,7 @@ namespace BotPlay {
 
         public PathFinder(SimpleMap map) {
             this.map = map;
-            // TODO: Refactor class to avoid doing so much work in the constructor. It feels fish but also makes (future) testing hard.
+            // TODO: Refactor class to avoid doing so much work in the constructor. It feels fishy but also makes (future) testing hard.
             (this.adjacencyMatrix, this.tileNeighbours) = GenerateGraph();
         }
 
