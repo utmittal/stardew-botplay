@@ -33,16 +33,22 @@ namespace BotPlay {
             Dictionary<SimpleTile, float> distanceFromOrigin = new();
             // Stores all the tiles we still need to visit
             HashSet<SimpleTile> tilesToVisit = new();
+            tilesToVisit.Add(originTile);
+            // Stores all the tiles we already visited
+            // This way we don't need to add all the tiles to "tilesToVisit" right at the start.
+            // Which reduces computation in GetClosestTile() for large grids.
+            // Could potentially solve this by implementing our own minheap, but this is easier.
+            HashSet<SimpleTile> visitedTiles = new();
 
             foreach (SimpleTile tile in map.GetMapTiles()) {
                 distanceFromOrigin[tile] = float.MaxValue;
-                tilesToVisit.Add(tile);
             }
             distanceFromOrigin[originTile] = 0;
 
             while (tilesToVisit.Count > 0) {
                 SimpleTile currentTile = GetClosestTile(tilesToVisit, distanceFromOrigin);
                 tilesToVisit.Remove(currentTile);
+                visitedTiles.Add(currentTile);
 
                 if (currentTile == destinationTile) {
                     break;
@@ -59,6 +65,9 @@ namespace BotPlay {
                     if (distanceNeighbourFromOrigin < distanceFromOrigin[neighbour]) {
                         distanceFromOrigin[neighbour] = distanceNeighbourFromOrigin;
                         prevTile[neighbour] = currentTile;
+                    }
+                    if (!visitedTiles.Contains(neighbour)) {
+                        tilesToVisit.Add(neighbour);
                     }
                 }
             }
