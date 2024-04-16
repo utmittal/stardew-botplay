@@ -1,8 +1,10 @@
-﻿using System;
+﻿using StardewModdingAPI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using xTile;
 
 namespace BotPlay {
     internal class PathFinder {
@@ -18,6 +20,11 @@ namespace BotPlay {
             this.map = map;
             // TODO: Refactor class to avoid doing so much work in the constructor. It feels fishy but also makes (future) testing hard.
             (this.adjacencyMatrix, this.tileNeighbours) = GenerateGraph();
+        }
+
+        IMonitor monitor;
+        public PathFinder(SimpleMap map, IMonitor monitor) : this(map) {
+            this.monitor = monitor;
         }
 
         public List<SimpleTile> FindPath((int x, int y) origin, (int x, int y) destination) {
@@ -80,8 +87,6 @@ namespace BotPlay {
             return path;
         }
 
-        // This doesn't work because we set all tiles at max distance at the start. So effectively, we end up finding a random debris tile.
-        // We either need to evaluate the whole map or we need better heuristics to set the maxvalue.
         public List<SimpleTile> FindPathToClosestDebris((int x, int y) origin) {
             SimpleTile originTile = map.GetMapTiles()[origin.x + 1, origin.y + 1];
             SimpleTile? destinationTile = null;
@@ -89,32 +94,31 @@ namespace BotPlay {
             // Stores preceding tile on path
             Dictionary<SimpleTile, SimpleTile> prevTile = new();
             // Stores distance of tile from originTile
-            // TODO: Pretty sure this can be replaced by the SortedList object
             Dictionary<SimpleTile, float> distanceFromOrigin = new();
             // Stores all the tiles we still need to visit
             HashSet<SimpleTile> tilesToVisit = new();
+            tilesToVisit.Add(originTile);
+            // Stores all the tiles we already visited
+            // This way we don't need to add all the tiles to "tilesToVisit" right at the start.
+            // Which reduces computation in GetClosestTile() for large grids.
+            // Could potentially solve this by implementing our own minheap, but this is easier.
+            HashSet<SimpleTile> visitedTiles = new();
 
-            // TODO: Feels like we can optimize this by specifying distanceFromOrigin as the 2d grid distance instead of MaxValue.
-            // It would work as a rough heuristic for looking at the closest tiles first.
             foreach (SimpleTile tile in map.GetMapTiles()) {
                 distanceFromOrigin[tile] = float.MaxValue;
-                tilesToVisit.Add(tile);
             }
             distanceFromOrigin[originTile] = 0;
 
             while (tilesToVisit.Count > 0) {
                 SimpleTile currentTile = GetClosestTile(tilesToVisit, distanceFromOrigin);
                 tilesToVisit.Remove(currentTile);
+                visitedTiles.Add(currentTile);
 
-                if (IsDebris(currentTile)) {
+                // Debris tiles are mostly blocked tiles, so they won't be in the map graph at all.
+                // But since we need to stand next to them, we just check ACTUAL neighbouring tiles.
+                if (IsNextToDebris(currentTile)) {
                     destinationTile = currentTile;
                     break;
-                }
-
-                if (!tileNeighbours.ContainsKey(currentTile)) {
-                    // this happens if we end up iterating over an endofmap tile or warp tile that is not the destination.
-                    // We know these cannot be part of the solution, so we simply move on
-                    continue;
                 }
 
                 foreach (SimpleTile neighbour in tileNeighbours[currentTile]) {
@@ -122,6 +126,9 @@ namespace BotPlay {
                     if (distanceNeighbourFromOrigin < distanceFromOrigin[neighbour]) {
                         distanceFromOrigin[neighbour] = distanceNeighbourFromOrigin;
                         prevTile[neighbour] = currentTile;
+                    }
+                    if (!visitedTiles.Contains(neighbour)) {
+                        tilesToVisit.Add(neighbour);
                     }
                 }
             }
@@ -143,13 +150,14 @@ namespace BotPlay {
             return path;
         }
 
-        private static bool IsDebris(SimpleTile tile) {
-            if (tile.Content == SimpleTile.TileContent.Tree || tile.Content == SimpleTile.TileContent.Weeds || tile.Content == SimpleTile.TileContent.Twig || tile.Content == SimpleTile.TileContent.Stone) {
-                return true;
+        private bool IsNextToDebris(SimpleTile tile) {
+            foreach (var neighbour in GetMiddleNeighbourIndices(tile.X, tile.Y)) {
+                SimpleTile ntile = this.map.GetMapTiles()[neighbour.Item1, neighbour.Item2];
+                if (ntile.Content == SimpleTile.TileContent.Tree || ntile.Content == SimpleTile.TileContent.Weeds || ntile.Content == SimpleTile.TileContent.Twig || ntile.Content == SimpleTile.TileContent.Stone) {
+                    return true;
+                }
             }
-            else {
-                return false;
-            }
+            return false;
         }
 
         private static SimpleTile GetClosestTile(HashSet<SimpleTile> tilesToVisit, Dictionary<SimpleTile, float> distanceFromOrigin) {
