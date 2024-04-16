@@ -18,13 +18,26 @@ namespace BotPlay {
         /// </summary>
         /// <returns></returns>
         public static bool TryEquipPickaxe(IMonitor monitor) {
-            if (Game1.player.CurrentItem.Name == PICKAXE) {
+            return TryEquipItem(PICKAXE, monitor);
+        }
+
+        public static bool TryEquipAxe(IMonitor monitor) {
+            return TryEquipItem(AXE, monitor);
+        }
+
+        public static bool TryEquipScythe(IMonitor monitor) {
+            return TryEquipItem(SCYTHE, monitor);
+        }
+
+        private static bool TryEquipItem(string itemName, IMonitor monitor) {
+            if (Game1.player.CurrentItem.Name == itemName) {
                 return true;
             }
 
-            for (int i=0; i < Game1.player.Items.Count; i++) {
-                if (Game1.player.Items[i].Name == PICKAXE) {
+            for (int i = 0; i < Game1.player.Items.Count; i++) {
+                if (Game1.player.Items[i].Name == itemName) {
                     Game1.player.CurrentToolIndex = i;
+                    monitor.Log($"Equipping item {itemName}");
                     return true;
                 }
             }
