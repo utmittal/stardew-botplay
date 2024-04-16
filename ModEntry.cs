@@ -13,6 +13,7 @@ using xTile.Dimensions;
 using StardewValley.Objects;
 using StardewValley.Tools;
 using StardewValley.TerrainFeatures;
+using StardewValley.Locations;
 
 namespace BotPlay {
     /// <summary>The mod entry point.</summary>
@@ -109,16 +110,15 @@ namespace BotPlay {
             //    SimpleMapVisualizer.VisualizeMap(currentMap, routeToWarp, this.Monitor);
             //}
 
-            Log($"current location name {Game1.currentLocation.Name}");
-            int playerX = (int)Game1.player.Tile.X;
-            int playerY = (int)Game1.player.Tile.Y;
-            Log($"current location coordinate: {playerX},{playerY}");
-            Log("warp locations:");
-
-            SimpleMap currentMap = new SimpleMap(Game1.currentLocation);
-            PathFinder pathFinder = new PathFinder(currentMap);
-            List<SimpleTile> route = pathFinder.FindPathToClosestDebris((playerX, playerY));
-            SimpleMapVisualizer.VisualizeMap(currentMap, route, this.Monitor);
+            //Log($"current location name {Game1.currentLocation.Name}");
+            //int playerX = (int)Game1.player.Tile.X;
+            //int playerY = (int)Game1.player.Tile.Y;
+            //Log($"current location coordinate: {playerX},{playerY}");
+            //Log("warp locations:");
+            //SimpleMap currentMap = new SimpleMap(Game1.currentLocation);
+            //PathFinder pathFinder = new PathFinder(currentMap);
+            //List<SimpleTile> route = pathFinder.FindPathToClosestDebris((playerX, playerY));
+            //SimpleMapVisualizer.VisualizeMap(currentMap, route, this.Monitor);
 
 
             //Log("Layers:");
@@ -159,6 +159,46 @@ namespace BotPlay {
             //Log($"Current tool: {Game1.player.CurrentTool.Name}");
             //Log($"Item count: {Game1.player.Items.Count}");
             //Game1.player.CurrentToolIndex = 2;
+
+            if (Game1.currentLocation is Town) {
+                Stopwatch sw = new();
+                float mapCreationAverage = 0;
+                float graphCreationAverage = 0;
+                float pathFindingAverage = 0;
+                int sampleSize = 10;
+
+                for (int i = 0; i < sampleSize; i++) {
+                    Log($"Run {i}");
+                    
+                    sw.Restart();
+                    SimpleMap simpleMap = new SimpleMap(Game1.currentLocation);
+                    // Forces initialization of the map tiles
+                    simpleMap.GetMapTiles();
+                    sw.Stop();
+                    Log($"\tMap creation:\t{sw.ElapsedMilliseconds}");
+                    mapCreationAverage += sw.ElapsedMilliseconds;
+
+                    sw.Restart();
+                    PathFinder pathFinder = new PathFinder(simpleMap);
+                    sw.Stop();
+                    Log($"\tGraph creation:\t{sw.ElapsedMilliseconds}");
+                    graphCreationAverage += sw.ElapsedMilliseconds;
+
+                    sw.Restart();
+                    var path = pathFinder.FindPath(((int)Game1.player.Tile.X, (int)Game1.player.Tile.Y), (81, -1));
+                    sw.Stop();
+                    Log($"\tPath finding:\t{sw.ElapsedMilliseconds}");
+                    pathFindingAverage += sw.ElapsedMilliseconds;
+
+                    if (i == sampleSize - 1) {
+                        SimpleMapVisualizer.VisualizeMap(simpleMap, path, this.Monitor);
+                    }
+                }
+                
+                Log($"Map creation (sample size {sampleSize}):\t{mapCreationAverage/sampleSize}");
+                Log($"Graph creation (sample size {sampleSize}):\t{graphCreationAverage / sampleSize}");
+                Log($"Path finding (sample size {sampleSize}):\t{pathFindingAverage / sampleSize}");
+            }
         }
 
         private void Play() {
