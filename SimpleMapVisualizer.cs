@@ -41,13 +41,29 @@ namespace BotPlay {
                         debugMap[i, j] = ' ';
                     }
                     else if (tileMatrix[i, j].Type == SimpleTile.TileType.EndOfMap) {
-                        debugMap[i, j] = 'X';
+                        debugMap[i, j] = '#';
                     }
                     else if (tileMatrix[i, j].Type == SimpleTile.TileType.Blocked) {
-                        debugMap[i, j] = 'o';
+                        char symbol = 'x';
+                        switch (tileMatrix[i, j].Content) {
+                            case SimpleTile.TileContent.Tree:
+                                symbol = 'T';
+                                break;
+                            case SimpleTile.TileContent.Weeds:
+                                symbol = 'w';
+                                break;
+                            case SimpleTile.TileContent.Stone:
+                                symbol = 'o';
+                                break;
+                            case SimpleTile.TileContent.Twig:
+                                symbol = '/';
+                                break;
+                        }
+
+                        debugMap[i, j] = symbol;
                     }
                     else if (tileMatrix[i, j].Type == SimpleTile.TileType.WarpPoint) {
-                        debugMap[i, j] = '#';
+                        debugMap[i, j] = '@';
                     }
                     else {
                         debugMap[i, j] = '?';
@@ -58,7 +74,7 @@ namespace BotPlay {
             if (Game1.currentLocation.Name == map.LocationName) {
                 int playerX = (int)Game1.player.Tile.X + 1;
                 int playerY = (int)Game1.player.Tile.Y + 1;
-                debugMap[playerX, playerY] = '@';
+                debugMap[playerX, playerY] = '&';
             }
 
             return debugMap;

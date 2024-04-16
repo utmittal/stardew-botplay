@@ -14,6 +14,16 @@ namespace BotPlay {
             EndOfMap
         }
 
+        public enum TileContent {
+            Unknown,
+            Empty,
+            Tree,
+            Twig,
+            Stone,
+            Weeds,
+            SeedSpot    // Seed spot is where you dig to find seasonal wild seeds. It's not where a tree seed exists.
+        }
+
         // X coordinate of tile in-game
         public int X {
             get;
@@ -23,11 +33,17 @@ namespace BotPlay {
             get;
         }
         public TileType Type {
-            get;
+            get; set;
         }
 
+        public TileContent Content {
+            get; set;
+        } = TileContent.Unknown;
+
         public SimpleTile(int x, int y, TileType type) {
-            this.X = x; this.Y = y; this.Type = type;
+            this.X = x;
+            this.Y = y;
+            this.Type = type;
         }
 
         public override readonly string ToString() {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,6 +21,10 @@ namespace BotPlay {
 
         public static HybridCoord FromGameCoord(float gameX, float gameY) {
             return FromGameCoord((int)gameX, (int)gameY);
+        }
+
+        public static HybridCoord FromGameCoord(Vector2 vector) {
+            return FromGameCoord(vector.X, vector.Y);
         }
 
         public static HybridCoord FromSimpleMapCoord(int simpleMapX, int simpleMapY) {

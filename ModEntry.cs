@@ -12,6 +12,7 @@ using System.Diagnostics;
 using xTile.Dimensions;
 using StardewValley.Objects;
 using StardewValley.Tools;
+using StardewValley.TerrainFeatures;
 
 namespace BotPlay {
     /// <summary>The mod entry point.</summary>
@@ -82,7 +83,9 @@ namespace BotPlay {
         private void CodeExplore() {
             //foreach (var feature in Game1.currentLocation.terrainFeatures) {
             //    foreach (var f2 in feature) {
+            //        TerrainFeature tf = f2.Value;
             //        Log($"{f2.Key}: {f2.Value}");
+            //        Log($"{f2.Value is StardewValley.TerrainFeatures.Tree}");
             //    }
             //}
 
@@ -92,19 +95,19 @@ namespace BotPlay {
             //    }
             //}
 
-            //Log($"current location name {Game1.currentLocation.Name}");
-            //int playerX = (int)Game1.player.Tile.X;
-            //int playerY = (int)Game1.player.Tile.Y;
-            //Log($"current location coordinate: {playerX},{playerY}");
-            //Log("warp locations:");
-            //foreach (Warp warp in Game1.currentLocation.warps) {
-            //    Log($"\t{warp.X},{warp.Y}: {warp.TargetName}");
-            //    Log("\tPath from player: ");
-            //    SimpleMap currentMap = new SimpleMap(Game1.currentLocation);
-            //    PathFinder pathFinder = new PathFinder(currentMap);
-            //    List<SimpleTile> routeToWarp = pathFinder.FindPath((playerX, playerY), (warp.X, warp.Y));
-            //    SimpleMapVisualizer.VisualizeMap(currentMap, routeToWarp, this.Monitor);
-            //}
+            Log($"current location name {Game1.currentLocation.Name}");
+            int playerX = (int)Game1.player.Tile.X;
+            int playerY = (int)Game1.player.Tile.Y;
+            Log($"current location coordinate: {playerX},{playerY}");
+            Log("warp locations:");
+            foreach (Warp warp in Game1.currentLocation.warps) {
+                Log($"\t{warp.X},{warp.Y}: {warp.TargetName}");
+                Log("\tPath from player: ");
+                SimpleMap currentMap = new SimpleMap(Game1.currentLocation);
+                PathFinder pathFinder = new PathFinder(currentMap);
+                List<SimpleTile> routeToWarp = pathFinder.FindPath((playerX, playerY), (warp.X, warp.Y));
+                SimpleMapVisualizer.VisualizeMap(currentMap, routeToWarp, this.Monitor);
+            }
 
             //Log("Layers:");
             //foreach (Layer layer in Game1.currentLocation.map.Layers) {
@@ -139,11 +142,11 @@ namespace BotPlay {
             //    }
             //}
 
-            // InputSimulator doesn't seem to provide a way to fake number keys for quick inventory switching. So we are directly going to switch the toolindex instead.
-            Log($"Current item: {Game1.player.CurrentItem.Name}");
-            Log($"Current tool: {Game1.player.CurrentTool.Name}");
-            Log($"Item count: {Game1.player.Items.Count}");
-            Game1.player.CurrentToolIndex = 2;
+            //// InputSimulator doesn't seem to provide a way to fake number keys for quick inventory switching. So we are directly going to switch the toolindex instead.
+            //Log($"Current item: {Game1.player.CurrentItem.Name}");
+            //Log($"Current tool: {Game1.player.CurrentTool.Name}");
+            //Log($"Item count: {Game1.player.Items.Count}");
+            //Game1.player.CurrentToolIndex = 2;
         }
 
         private void Play() {

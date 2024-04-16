@@ -54,6 +54,20 @@ namespace BotPlay {
 
             SimpleTile[,] generatedTiles = new SimpleTile[simpleMapWidth, simpleMapHeight];
 
+            generatedTiles = InitializeMap(generatedTiles);
+            generatedTiles = AddWarps(generatedTiles);
+            generatedTiles = AddTileContents(generatedTiles);
+
+            return generatedTiles;
+        }
+
+        private SimpleTile[,] InitializeMap(SimpleTile[,] generatedTiles) {
+            // Initialize from given items rather than Game1 item to avoid the small chance of underlying map changing between method calls.
+            int simpleMapWidth = generatedTiles.GetLength(0);
+            int simpleMapHeight = generatedTiles.GetLength(1);
+            int gameMapWidth = simpleMapWidth - 2;
+            int gameMapHeight = simpleMapHeight - 2;
+
             for (int i = 0; i < simpleMapWidth; i++) {
                 for (int j = 0; j < simpleMapHeight; j++) {
                     HybridCoord coords = HybridCoord.FromSimpleMapCoord(i, j);
@@ -79,10 +93,42 @@ namespace BotPlay {
                 }
             }
 
-            // Add warp tiles
+            return generatedTiles;
+        }
+
+        private SimpleTile[,] AddWarps(SimpleTile[,] generatedTiles) {
             foreach (Warp warp in sdvLocation.warps) {
                 HybridCoord warpCoords = HybridCoord.FromGameCoord(warp.X, warp.Y);
-                generatedTiles[warpCoords.SimpleMap.X, warpCoords.SimpleMap.Y] = new SimpleTile(warpCoords.Game.X, warpCoords.Game.Y, SimpleTile.TileType.WarpPoint);
+                generatedTiles[warpCoords.SimpleMap.X, warpCoords.SimpleMap.Y].Type = SimpleTile.TileType.WarpPoint;
+            }
+            return generatedTiles;
+        }
+
+        private SimpleTile[,] AddTileContents(SimpleTile[,] generatedTiles) {
+            foreach (var gameObject in sdvLocation.Objects.Pairs) {
+                if (gameObject.Value.Name == GameConstants.Objects.TWIG) {
+                    HybridCoord coord = HybridCoord.FromGameCoord(gameObject.Key);
+                    generatedTiles[coord.SimpleMap.X, coord.SimpleMap.Y].Content = SimpleTile.TileContent.Twig;
+                }
+                else if (gameObject.Value.Name == GameConstants.Objects.STONE) {
+                    HybridCoord coord = HybridCoord.FromGameCoord(gameObject.Key);
+                    generatedTiles[coord.SimpleMap.X, coord.SimpleMap.Y].Content = SimpleTile.TileContent.Stone;
+                }
+                else if (gameObject.Value.Name == GameConstants.Objects.WEEDS) {
+                    HybridCoord coord = HybridCoord.FromGameCoord(gameObject.Key);
+                    generatedTiles[coord.SimpleMap.X, coord.SimpleMap.Y].Content = SimpleTile.TileContent.Weeds;
+                }
+                else if (gameObject.Value.Name == GameConstants.Objects.SEEDSPOT) {
+                    HybridCoord coord = HybridCoord.FromGameCoord(gameObject.Key);
+                    generatedTiles[coord.SimpleMap.X, coord.SimpleMap.Y].Content = SimpleTile.TileContent.SeedSpot;
+                }
+            }
+
+            foreach (var feature in sdvLocation.terrainFeatures.Pairs) {
+                if (feature.Value is StardewValley.TerrainFeatures.Tree) {
+                    HybridCoord coord = HybridCoord.FromGameCoord(feature.Key);
+                    generatedTiles[coord.SimpleMap.X, coord.SimpleMap.Y].Content = SimpleTile.TileContent.Tree;
+                }
             }
 
             return generatedTiles;
