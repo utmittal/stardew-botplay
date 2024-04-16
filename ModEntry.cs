@@ -139,30 +139,26 @@ namespace BotPlay {
             //    }
             //}
 
-            // I think we should use the input simulator instead to cycle through the inventory
+            // InputSimulator doesn't seem to provide a way to fake number keys for quick inventory switching. So we are directly going to switch the toolindex instead.
             Log($"Current item: {Game1.player.CurrentItem.Name}");
             Log($"Current tool: {Game1.player.CurrentTool.Name}");
-            Item pickaxe = new Pickaxe();
-            foreach (var item in Game1.player.Items) {
-                if (item != null) {
-                    Log($"{item.Name}");
-                    if (item.Name == "Pickaxe") {
-                        pickaxe = item;
-                    }
-                }
-            }
+            Log($"Item count: {Game1.player.Items.Count}");
+            Game1.player.CurrentToolIndex = 2;
         }
 
         private void Play() {
             // Go to farm if possible
-            if (!PathWalker.Instance.IsWalking) {
+            if (Game1.currentLocation.Name != Location.FARM.Value && !PathWalker.Instance.IsWalking) {
                 NavUtil.GoToWarp(Location.FARM, this.Monitor);
             }
 
-            // Find an empty chest
+            // Once on farm
             if (Game1.currentLocation.Name == Location.FARM.Value) {
-                (int x, int y) emptyChestLocation = GetEmptyChestLocation();
-                Log($"Found empty chest at: {emptyChestLocation.x},{emptyChestLocation.y}");
+                //// Find an empty chest
+                //(int x, int y) emptyChestLocation = GetEmptyChestLocation();
+                //Log($"Found empty chest at: {emptyChestLocation.x},{emptyChestLocation.y}");
+                // Equip pickaxe
+                InventoryUtil.TryEquipPickaxe(this.Monitor);
             }
         }
 
