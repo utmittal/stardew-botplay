@@ -95,19 +95,31 @@ namespace BotPlay {
             //    }
             //}
 
+            //Log($"current location name {Game1.currentLocation.Name}");
+            //int playerX = (int)Game1.player.Tile.X;
+            //int playerY = (int)Game1.player.Tile.Y;
+            //Log($"current location coordinate: {playerX},{playerY}");
+            //Log("warp locations:");
+            //foreach (Warp warp in Game1.currentLocation.warps) {
+            //    Log($"\t{warp.X},{warp.Y}: {warp.TargetName}");
+            //    Log("\tPath from player: ");
+            //    SimpleMap currentMap = new SimpleMap(Game1.currentLocation);
+            //    PathFinder pathFinder = new PathFinder(currentMap);
+            //    List<SimpleTile> routeToWarp = pathFinder.FindPath((playerX, playerY), (warp.X, warp.Y));
+            //    SimpleMapVisualizer.VisualizeMap(currentMap, routeToWarp, this.Monitor);
+            //}
+
             Log($"current location name {Game1.currentLocation.Name}");
             int playerX = (int)Game1.player.Tile.X;
             int playerY = (int)Game1.player.Tile.Y;
             Log($"current location coordinate: {playerX},{playerY}");
             Log("warp locations:");
-            foreach (Warp warp in Game1.currentLocation.warps) {
-                Log($"\t{warp.X},{warp.Y}: {warp.TargetName}");
-                Log("\tPath from player: ");
-                SimpleMap currentMap = new SimpleMap(Game1.currentLocation);
-                PathFinder pathFinder = new PathFinder(currentMap);
-                List<SimpleTile> routeToWarp = pathFinder.FindPath((playerX, playerY), (warp.X, warp.Y));
-                SimpleMapVisualizer.VisualizeMap(currentMap, routeToWarp, this.Monitor);
-            }
+
+            SimpleMap currentMap = new SimpleMap(Game1.currentLocation);
+            PathFinder pathFinder = new PathFinder(currentMap);
+            List<SimpleTile> route = pathFinder.FindPathToClosestDebris((playerX, playerY));
+            SimpleMapVisualizer.VisualizeMap(currentMap, route, this.Monitor);
+
 
             //Log("Layers:");
             //foreach (Layer layer in Game1.currentLocation.map.Layers) {

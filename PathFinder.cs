@@ -77,6 +77,78 @@ namespace BotPlay {
             return path;
         }
 
+        // This doesn't work because we set all tiles at max distance at the start. So effectively, we end up finding a random debris tile.
+        // We either need to evaluate the whole map or we need better heuristics to set the maxvalue.
+        public List<SimpleTile> FindPathToClosestDebris((int x, int y) origin) {
+            SimpleTile originTile = map.GetMapTiles()[origin.x + 1, origin.y + 1];
+            SimpleTile? destinationTile = null;
+
+            // Stores preceding tile on path
+            Dictionary<SimpleTile, SimpleTile> prevTile = new();
+            // Stores distance of tile from originTile
+            // TODO: Pretty sure this can be replaced by the SortedList object
+            Dictionary<SimpleTile, float> distanceFromOrigin = new();
+            // Stores all the tiles we still need to visit
+            HashSet<SimpleTile> tilesToVisit = new();
+
+            // TODO: Feels like we can optimize this by specifying distanceFromOrigin as the 2d grid distance instead of MaxValue.
+            // It would work as a rough heuristic for looking at the closest tiles first.
+            foreach (SimpleTile tile in map.GetMapTiles()) {
+                distanceFromOrigin[tile] = float.MaxValue;
+                tilesToVisit.Add(tile);
+            }
+            distanceFromOrigin[originTile] = 0;
+
+            while (tilesToVisit.Count > 0) {
+                SimpleTile currentTile = GetClosestTile(tilesToVisit, distanceFromOrigin);
+                tilesToVisit.Remove(currentTile);
+
+                if (IsDebris(currentTile)) {
+                    destinationTile = currentTile;
+                    break;
+                }
+
+                if (!tileNeighbours.ContainsKey(currentTile)) {
+                    // this happens if we end up iterating over an endofmap tile or warp tile that is not the destination.
+                    // We know these cannot be part of the solution, so we simply move on
+                    continue;
+                }
+
+                foreach (SimpleTile neighbour in tileNeighbours[currentTile]) {
+                    float distanceNeighbourFromOrigin = distanceFromOrigin[currentTile] + adjacencyMatrix[(currentTile, neighbour)];
+                    if (distanceNeighbourFromOrigin < distanceFromOrigin[neighbour]) {
+                        distanceFromOrigin[neighbour] = distanceNeighbourFromOrigin;
+                        prevTile[neighbour] = currentTile;
+                    }
+                }
+            }
+
+            // if prevtile contains no entry for destinationTile, it means we didn't find a path.
+            if (destinationTile == null) {
+                return new List<SimpleTile>();
+            }
+
+            List<SimpleTile> path = new List<SimpleTile>();
+            SimpleTile backtrackTile = (SimpleTile)destinationTile;
+            while (backtrackTile != originTile) {
+                path.Insert(0, backtrackTile);
+                backtrackTile = prevTile[backtrackTile];
+            }
+            // Add origin tile into the path
+            path.Insert(0, originTile);
+
+            return path;
+        }
+
+        private static bool IsDebris(SimpleTile tile) {
+            if (tile.Content == SimpleTile.TileContent.Tree || tile.Content == SimpleTile.TileContent.Weeds || tile.Content == SimpleTile.TileContent.Twig || tile.Content == SimpleTile.TileContent.Stone) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
         private static SimpleTile GetClosestTile(HashSet<SimpleTile> tilesToVisit, Dictionary<SimpleTile, float> distanceFromOrigin) {
             SimpleTile? closestTile = null;
             float closestTileDistance = float.MaxValue;
