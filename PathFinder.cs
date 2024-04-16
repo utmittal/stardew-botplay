@@ -20,9 +20,6 @@ namespace BotPlay {
             (this.adjacencyMatrix, this.tileNeighbours) = GenerateGraph();
         }
 
-        // Note: While A* will work well for this particular case (heuristic is 2d grid distance), it's not great for us in general because we will often be doing open ended searches. I.e. the goal is not known in advance.
-        // So I think some sort of mechanic where we apply the heuristic initially to distance but record whether it's a heuristic distance or not, so that if the actual distance is > heuristic distance, we can still update it properly.
-        // Actually, you are wrong, pretty sure we can straight up use A* here.
         public List<SimpleTile> FindPath((int x, int y) origin, (int x, int y) destination) {
             SimpleTile originTile = map.GetMapTiles()[origin.x + 1, origin.y + 1];
             SimpleTile destinationTile = map.GetMapTiles()[destination.x + 1, destination.y + 1];
@@ -52,12 +49,6 @@ namespace BotPlay {
 
                 if (currentTile == destinationTile) {
                     break;
-                }
-
-                if (!tileNeighbours.ContainsKey(currentTile)) {
-                    // this happens if we end up iterating over an endofmap tile or warp tile that is not the destination.
-                    // We know these cannot be part of the solution, so we simply move on
-                    continue;
                 }
 
                 foreach (SimpleTile neighbour in tileNeighbours[currentTile]) {
@@ -183,21 +174,21 @@ namespace BotPlay {
             Dictionary<(SimpleTile, SimpleTile), float> adjMatrix = new();
             Dictionary<SimpleTile, HashSet<SimpleTile>> tileNeigh = new();
 
-            // We iterate only over the actual game map. We exclude the first and last row/column because it's filled with end of map tiles or warp tiles both of which cannot have edges.
-            // Warp tiles can have a directed edge from an empty tile but the processing of the empty tile will handle that.
-            // Iterating in this way also means we can check for tiles surrounding the current tile without having to worry about going out of bounds
-            for (int i = 1; i < map.GetMapTiles().GetLength(0) - 1; i++) {
-                for (int j = 1; j < map.GetMapTiles().GetLength(1) - 1; j++) {
+            for (int i = 0; i < map.GetMapTiles().GetLength(0); i++) {
+                for (int j = 0; j < map.GetMapTiles().GetLength(1); j++) {
                     SimpleTile currentTile = map.GetMapTiles()[i, j];
 
                     // Create an empty hashset of neighbours if it doesn't exist already because we want all tiles to be represented in the tileNeighbours dictionary even if they are unconnected.
                     tileNeigh.TryAdd(currentTile, new());
 
                     // If tile is blocked or is a warp point, it cannot have edges to any other tile
-                    if (currentTile.Type == SimpleTile.TileType.Blocked || currentTile.Type == SimpleTile.TileType.WarpPoint) {
+                    if (currentTile.Type == SimpleTile.TileType.Blocked || currentTile.Type == SimpleTile.TileType.WarpPoint || currentTile.Type == SimpleTile.TileType.EndOfMap) {
                         continue;
                     }
                     else if (currentTile.Type == SimpleTile.TileType.Empty) {
+                        // Note: the only reason this doesn't blow up is because the boundary tiles for the map are garunteed to be endofmap or warppoint tiles which get caught in the earlier if 
+                        // condition. If one of those tiles somehow falls through to this point, the neighbouring tiles would throw out of index errors and blow up the program.
+                        // A risk I am willing to take.
                         (int, int)[] middleNeighbours = GetMiddleNeighbourIndices(i, j);
                         (int, int)[] cornerNeighbours = GetCornerNeighbourIndices(i, j);
                         foreach ((int ni, int nj) in middleNeighbours) {
