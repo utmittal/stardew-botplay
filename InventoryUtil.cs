@@ -30,7 +30,7 @@ namespace BotPlay {
         }
 
         private static bool TryEquipItem(string itemName, IMonitor monitor) {
-            if (Game1.player.CurrentItem.Name == itemName) {
+            if (Game1.player.CurrentItem != null && Game1.player.CurrentItem.Name == itemName) {
                 return true;
             }
 

@@ -110,15 +110,15 @@ namespace BotPlay {
             //    SimpleMapVisualizer.VisualizeMap(currentMap, routeToWarp, this.Monitor);
             //}
 
-            Log($"current location name {Game1.currentLocation.Name}");
-            int playerX = (int)Game1.player.Tile.X;
-            int playerY = (int)Game1.player.Tile.Y;
-            Log($"current location coordinate: {playerX},{playerY}");
-            Log("warp locations:");
-            SimpleMap currentMap = new SimpleMap(Game1.currentLocation);
-            PathFinder pathFinder = new PathFinder(currentMap, this.Monitor);
-            List<SimpleTile> route = pathFinder.FindPathToClosestDebris((playerX, playerY));
-            SimpleMapVisualizer.VisualizeMap(currentMap, route, this.Monitor);
+            //Log($"current location name {Game1.currentLocation.Name}");
+            //int playerX = (int)Game1.player.Tile.X;
+            //int playerY = (int)Game1.player.Tile.Y;
+            //Log($"current location coordinate: {playerX},{playerY}");
+            //Log("warp locations:");
+            //SimpleMap currentMap = new SimpleMap(Game1.currentLocation);
+            //PathFinder pathFinder = new PathFinder(currentMap, this.Monitor);
+            //List<SimpleTile> route = pathFinder.FindPathToClosestDebris((playerX, playerY));
+            //SimpleMapVisualizer.VisualizeMap(currentMap, route, this.Monitor);
 
 
             //Log("Layers:");
@@ -138,11 +138,15 @@ namespace BotPlay {
             //Log($"Display Name: {Game1.currentLocation.DisplayName}");
             //Log($"Parent Name: {Game1.currentLocation.parentLocationName}");
 
-            //Log($"Farmer width, height: {Game1.player.FarmerSprite.SpriteWidth}, {Game1.player.FarmerSprite.SpriteHeight}");
-            //Log($"Farmer pixel position: {Game1.player.Position.X}, {Game1.player.Position.Y}");
-            //var boundingBox = Game1.player.GetBoundingBox();
-            //Log($"Farmer bounding box - left,right,up,down: {boundingBox.Left},{boundingBox.Right},{boundingBox.Top},{boundingBox.Bottom}");
-            //Log($"Farm xoffset,yoffset: {Game1.player.xOffset},{Game1.player.yOffset}");
+            // Farmer bounding box stuff
+            Log($"Farmer width, height: {Game1.player.FarmerSprite.SpriteWidth}, {Game1.player.FarmerSprite.SpriteHeight}");
+            Log($"Farmer pixel position: {Game1.player.Position.X}, {Game1.player.Position.Y}");
+            Log($"Farmer tile: {Game1.player.Tile.X},{Game1.player.Tile.Y}");
+            Log($"Farmer tile pixel position: {Game1.currentLocation.Map.Layers[0].GetTileDisplayRectangle(Game1.viewport, new xTile.Dimensions.Location((int)Game1.player.Tile.X, (int)Game1.player.Tile.Y))}");
+            var boundingBox = Game1.player.GetBoundingBox();
+            Log($"Farmer bounding box - left,right,up,down: {boundingBox.Left},{boundingBox.Right},{boundingBox.Top},{boundingBox.Bottom}");
+            Log($"Farmer xoffset,yoffset: {Game1.player.xOffset},{Game1.player.yOffset}");
+            Log($"Farmer standing pixel: {Game1.player.StandingPixel.X},{Game1.player.StandingPixel.Y}");
 
             //foreach (var item in Game1.currentLocation.Objects) {
             //    foreach (var item2 in item) {
@@ -215,14 +219,11 @@ namespace BotPlay {
 
                 // Equip pickaxe
                 InventoryUtil.TryEquipPickaxe(this.Monitor);
+            }
 
-                // Walk to nearest debris
-                int playerX = (int)Game1.player.Tile.X;
-                int playerY = (int)Game1.player.Tile.Y;
-                SimpleMap currentMap = new SimpleMap(Game1.currentLocation);
-                PathFinder pathFinder = new PathFinder(currentMap, this.Monitor);
-                List<SimpleTile> route = pathFinder.FindPathToClosestDebris((playerX, playerY));
-                PathWalker.Instance.InitiateWalk(route);
+            // Go to farm if possible
+            if (Game1.currentLocation.Name == Location.TOWN.Value && !PathWalker.Instance.IsWalking) {
+                NavUtil.GoToWarp(Location.MOUNTAIN, this.Monitor);
             }
         }
 

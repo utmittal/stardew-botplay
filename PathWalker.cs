@@ -1,4 +1,5 @@
-﻿using StardewModdingAPI;
+﻿using Microsoft.Xna.Framework;
+using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using System;
@@ -107,18 +108,17 @@ namespace BotPlay {
                 if (path.Count > 0) {
                     nextTile = path.Dequeue();
                     monitor.Log($"\tUpdated next tile: {nextTile.X},{nextTile.Y}");
-
-                    Direction directionToWalk = CalculateDirection(player, nextTile);
-                    if (currentDirection != directionToWalk) {
-                        UpdateInput(directionToWalk);
-                        currentDirection = directionToWalk;
-                        monitor.Log($"\t Updated current direction: {currentDirection}");
-                    }
                 }
                 else if (path.Count == 0) {
                     StopGracefully();
                     return;
                 }
+            }
+            Direction directionToWalk = CalculateDirection(player, nextTile);
+            if (currentDirection != directionToWalk) {
+                UpdateInput(directionToWalk);
+                currentDirection = directionToWalk;
+                monitor.Log($"\t Updated current direction: {currentDirection}");
             }
         }
 
@@ -131,6 +131,19 @@ namespace BotPlay {
         }
 
         private bool PlayerAtLocation((int x, int y) player, SimpleTile tile) {
+            var playerBoundingBox = Game1.player.GetBoundingBox();
+            var tileRectangle = Game1.currentLocation.Map.Layers[0].GetTileDisplayRectangle(Game1.viewport,new xTile.Dimensions.Location(tile.X,tile.Y));
+
+            monitor.Log($"{playerBoundingBox.Left},{playerBoundingBox.Right},{playerBoundingBox.Top},{playerBoundingBox.Bottom}");
+            monitor.Log($"{tileRectangle}");
+
+            if (playerBoundingBox.Left >= tileRectangle.X && playerBoundingBox.Right <= tileRectangle.X + tileRectangle.Width && playerBoundingBox.Top >= tileRectangle.Y && playerBoundingBox.Bottom <= tileRectangle.Y + tileRectangle.Height) {
+                return true;
+            }
+            else {
+                return false;
+            }
+
             if (player.x == tile.X && player.y == tile.Y) {
                 return true;
             }
@@ -149,36 +162,69 @@ namespace BotPlay {
         }
 
         private Direction CalculateDirection((int x, int y) player, SimpleTile simpleTile) {
-            (int x, int y) tile = (simpleTile.X, simpleTile.Y);
+            var playerBoundingBox = Game1.player.GetBoundingBox();
+            var tileRectangle = Game1.currentLocation.Map.Layers[0].GetTileDisplayRectangle(Game1.viewport, new xTile.Dimensions.Location(simpleTile.X, simpleTile.Y));
+            var tileRec = new Rectangle(tileRectangle.X, tileRectangle.Y, tileRectangle.Width, tileRectangle.Height);
 
-            if (player.x == tile.x && player.y - 1 == tile.y) {
+            if (playerBoundingBox.Left >= tileRec.Left && playerBoundingBox.Right <= tileRec.Right && playerBoundingBox.Bottom > tileRec.Bottom) {
                 return Direction.Up;
             }
-            else if (player.x + 1 == tile.x && player.y - 1 == tile.y) {
+            else if (playerBoundingBox.Left < tileRec.Left && playerBoundingBox.Bottom > tileRec.Bottom) {
                 return Direction.UpRight;
             }
-            else if (player.x + 1 == tile.x && player.y == tile.y) {
+            else if (playerBoundingBox.Left < tileRec.Left && playerBoundingBox.Bottom <= tileRec.Bottom && playerBoundingBox.Top >= tileRec.Top) {
                 return Direction.Right;
             }
-            else if (player.x + 1 == tile.x && player.y + 1 == tile.y) {
+            else if (playerBoundingBox.Left < tileRec.Left && playerBoundingBox.Top < tileRec.Top) {
                 return Direction.DownRight;
             }
-            else if (player.x == tile.x && player.y + 1 == tile.y) {
+            else if (playerBoundingBox.Left >= tileRec.Left && playerBoundingBox.Right <= tileRec.Right && playerBoundingBox.Top < tileRec.Top) {
                 return Direction.Down;
             }
-            else if (player.x - 1 == tile.x && player.y + 1 == tile.y) {
+            else if (playerBoundingBox.Right > tileRec.Right && playerBoundingBox.Top < tileRec.Top) {
                 return Direction.DownLeft;
             }
-            else if (player.x - 1 == tile.x && player.y == tile.y) {
+            else if (playerBoundingBox.Right > tileRec.Right && playerBoundingBox.Bottom <= tileRec.Bottom && playerBoundingBox.Top >= tileRec.Top) {
                 return Direction.Left;
             }
-            else if (player.x - 1 == tile.x && player.y - 1 == tile.y) {
+            else if (playerBoundingBox.Right > tileRec.Right && playerBoundingBox.Bottom > tileRec.Bottom) {
                 return Direction.UpLeft;
             }
             else {
-                monitor.Log($"Destination tile ({tile.x},{tile.y}) is not in a 1 tile circle of the player ({player.x},{player.y}). Setting direction to None.");
+                monitor.Log($"player bounding box: {playerBoundingBox}, tilerec: {tileRec}. Setting direction to None.");
                 return Direction.None;
             }
+
+            //(int x, int y) tile = (simpleTile.X, simpleTile.Y);
+
+            //if (player.x == tile.x && player.y - 1 == tile.y) {
+            //    return Direction.Up;
+            //}
+            //else if (player.x + 1 == tile.x && player.y - 1 == tile.y) {
+            //    return Direction.UpRight;
+            //}
+            //else if (player.x + 1 == tile.x && player.y == tile.y) {
+            //    return Direction.Right;
+            //}
+            //else if (player.x + 1 == tile.x && player.y + 1 == tile.y) {
+            //    return Direction.DownRight;
+            //}
+            //else if (player.x == tile.x && player.y + 1 == tile.y) {
+            //    return Direction.Down;
+            //}
+            //else if (player.x - 1 == tile.x && player.y + 1 == tile.y) {
+            //    return Direction.DownLeft;
+            //}
+            //else if (player.x - 1 == tile.x && player.y == tile.y) {
+            //    return Direction.Left;
+            //}
+            //else if (player.x - 1 == tile.x && player.y - 1 == tile.y) {
+            //    return Direction.UpLeft;
+            //}
+            //else {
+            //    monitor.Log($"Destination tile ({tile.x},{tile.y}) is not in a 1 tile circle of the player ({player.x},{player.y}). Setting direction to None.");
+            //    return Direction.None;
+            //}
         }
 
         private void UpdateInput(Direction directionToWalk) {
