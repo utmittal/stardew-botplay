@@ -62,6 +62,11 @@ namespace BotPlay {
         }
 
         public void InitiateWalk(List<SimpleTile> pathToWalk) {
+            if (this.IsWalking == true) {
+                monitor.Log($"Walking already in progress. Not initiating new walk.");
+                return;
+            }
+
             if (pathToWalk.Count == 0) {
                 monitor.Log($"Empty path provided. Not moving.",LogLevel.Warn);
                 StopGracefully();

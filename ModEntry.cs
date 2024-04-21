@@ -212,8 +212,17 @@ namespace BotPlay {
                 //// Find an empty chest
                 //(int x, int y) emptyChestLocation = GetEmptyChestLocation();
                 //Log($"Found empty chest at: {emptyChestLocation.x},{emptyChestLocation.y}");
+
                 // Equip pickaxe
                 InventoryUtil.TryEquipPickaxe(this.Monitor);
+
+                // Walk to nearest debris
+                int playerX = (int)Game1.player.Tile.X;
+                int playerY = (int)Game1.player.Tile.Y;
+                SimpleMap currentMap = new SimpleMap(Game1.currentLocation);
+                PathFinder pathFinder = new PathFinder(currentMap, this.Monitor);
+                List<SimpleTile> route = pathFinder.FindPathToClosestDebris((playerX, playerY));
+                PathWalker.Instance.InitiateWalk(route);
             }
         }
 
